@@ -7,6 +7,16 @@
     - [Note:](#note-1)
     - [Note:](#note-2)
   - [P.3: Express intent](#p3-express-intent)
+    - [example](#example)
+  - [p.4: Ideally, a program should be statically type safe](#p4-ideally-a-program-should-be-statically-type-safe)
+    - [Reason](#reason)
+    - [Enforcement](#enforcement)
+  - [P.5: Prefer compile-time checking to run-time checking](#p5-prefer-compile-time-checking-to-run-time-checking)
+    - [Reason](#reason-1)
+    - [Example](#example-1)
+    - [Enforcement](#enforcement-1)
+  - [P.6: What cannot be checked at compile time should be checkable at run time](#p6-what-cannot-be-checked-at-compile-time-should-be-checkable-at-run-time)
+    - [example](#example-2)
 
 ## P.1: Express ideas directly in code
 ```cpp
@@ -68,3 +78,78 @@ Using valid ISO C++ does not guarantee portability. Avoid dependence on undefine
 there are environments where restrictions on use of standard C++ language or library features are necessary, e.g., to avoid dynamic memory allocation as required by aircraft control software standards. 
 
 ## P.3: Express intent
+### example 
+```cpp
+draw_line(int, int, int, int); // obscure
+draw_line(Point, Point); // clearer
+```
+
+## p.4: Ideally, a program should be statically type safe
+### Reason 
+Probelm areas:
+- unions
+- casts
+- array decay
+- range errors
+- narrowing conversions
+
+### Enforcement
+Always suggest an alternative. For example:
+- unions - use `variant`
+- casts - minimize their use; templates can help
+- array decay - use `span`
+- range errors - use `span`
+- narrowing conversions - minimize their use and use `narrow` or `narrow_cast` where they are necessary
+
+## P.5: Prefer compile-time checking to run-time checking 
+
+### Reason 
+code clarity and performance.
+You don't need to write error handlers for errors caught at compile time.
+
+### Example
+```cpp
+// don't: avoidable code
+int bits = 0;
+for (Int i = 1; i; i<<=1)
+  ++bits;
+if (bits < 32)
+  ceer << "Int too small\n";
+```
+This example fails to achieve what it is trying to achieve (because overflow is undefined).
+```cpp
+// replaced with a simple static_assert
+static_assert(sizeof(Int)>= 4); // do: compile-time check
+```
+or better still just use the type system and replace `int` with `int32_t`.
+
+```cpp
+void read(int*p, int n); // read max n integers into *p
+int a[100];
+read(a, 1000); // bad, off the end
+```
+better
+```cpp
+void read(span<int> r); // read into the range of integers r
+
+int a[100];
+read(a); // better: let the compiler figure out the number of elements
+```
+
+### Enforcement
+- look for pointer arguments
+- look for run-time checks for range violations.
+  
+## P.6: What cannot be checked at compile time should be checkable at run time
+
+we should endeavor to write programs that in principle can be checked, given sufficient resources (analysis programs, run-time checks, machine resources, time).
+
+### example 
+```cpp
+// bad
+// separately compiled, possible dynamically loaded
+extern void f(int* p);
+void g(int n)
+{
+  f(new int[n]); // bad: the number of elements is not passed to f()
+}
