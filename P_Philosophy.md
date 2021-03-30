@@ -17,6 +17,9 @@
     - [Enforcement](#enforcement-1)
   - [P.6: What cannot be checked at compile time should be checkable at run time](#p6-what-cannot-be-checked-at-compile-time-should-be-checkable-at-run-time)
     - [example](#example-2)
+    - [example](#example-3)
+    - [NOTE:](#note-3)
+  - [P.7: Catch run-time errors early](#p7-catch-run-time-errors-early)
 
 ## P.1: Express ideas directly in code
 ```cpp
@@ -152,4 +155,109 @@ extern void f(int* p);
 void g(int n)
 {
   f(new int[n]); // bad: the number of elements is not passed to f()
+}
+```
+the number of elements has been so thoroughly "obscured" that static analysis is probably rendered infeasible and dynamic checking can be very difficult when `f()` is part of an ABI so that we cannot "instrument" that pointer.
+
+```cpp
+extern void f2(int* p, int n);
+void g2(int n)
+{
+  f2(new int[n], m); // bad: a wrong number of elements can be passed to f()
+}
+```
+Passing the number of elements as an argument is better than just passing the pointer and relying on some (unstated) convention for knowing or discovering the number of elements.
+
+```cpp
+// the standard library resource management pointers fail to pass the size when they point to an object
+// separately compiled, possible dynamically loaded
+// this assumes the calling code is ABI-compatible, using a compatible C++ compiler and the same stdlib implementation
+extern void f3(unique_ptr<int[]>, int n)
+
+void g3(int n)
+{
+  f3(make_unique<int[]>(n), m); // bad: pass ownership and size separately
+}
+```
+
+```cpp
+// we need to pass the pointer and the number of elements as an integral object
+extern void f4(vector<int>&); // separately compiled, possibly dynamically loaded
+extern void f4(span<int>); // separately compiled, possibly dynamically loaded
+void g3(int n)
+{
+  vector<int> v(n);
+  f4(v); // pass a reference, retain ownership
+  f4(span<int>{v}); // pass a view, retain ownership
+}
+```
+This design carries the number of elements along as an integral part of an object, so that errors are unlikely and dynamic (run-time) checking is always feasible, if not always affordable.
+
+### example
+How do we transfer both ownership and all information needed for validating use?
+```cpp
+vector<int> f5(int n) // OK: move
+{
+  vector<int> v(n);
+  // ... initialize v ...
+  return v;
+}
+
+unique_ptr<int[]> f6(int n)  // bad: loses n
+{
+  auto p = make_unique<int[]>(n);
+  // ... initialize *p
+  return p;
+}
+
+owner<int*> f7(int n) // bad: loses n and we might forget to delete
+{
+  owner<int*> p = new int[n];
+  // ... initialize *p ...
+  return p;
+}
+```
+### NOTE:
+这个rule有点没看懂
+
+## P.7: Catch run-time errors early
+```cpp
+void increment1(int* p, int n) // bad: error-prone
+{
+  for (int i = 0; i < n; ++i) ++p[i];
+}
+
+void use1(int m)
+{
+  const int n = 10;
+  int a[n] = {};
+  // ...
+  increment1(a, m); // maybe typo, maybe m <= n is supposed
+  // but assume that m == 20
+}
+```
+here in `use1` that will lead to corrupted data or a crash.
+The (pointer, count)-style interface leaves `increment1()` with no realistic way of defending itself against out-of-range errors.
+if we could check subscripts for out of range access, then the error would not be discovered until `p[10]` was accessed. 
+```cpp
+void increment2(span<int> p)
+{
+  for (int& x: p) ++x;
+}
+
+void use2(int m)
+{
+  const int n = 10;
+  int a[n] = {};
+  // ...
+  increment2({a, m}); // maybe typo, maybe m <= n is supposed
+}
+```
+Now, `m <= n` can be checked at the point of call(early) rather than later. 
+```cpp
+void use3(int m)
+{
+  const int n = 10;
+  int a[n] = {};
+  increment2(a); // the number of elements of a need not be repeated
 }
