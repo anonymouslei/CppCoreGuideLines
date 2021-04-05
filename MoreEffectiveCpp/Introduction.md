@@ -12,7 +12,7 @@
 
 ## Terminology
 ### Declaration (P17)
-A declaration tells compilers about the name and type of something, but it omits certiain details.
+A declaration tells compilers about the name and type of something, but it omits certain details.
 There are declarations:
 ```cpp
 extern int x; // object declaration
