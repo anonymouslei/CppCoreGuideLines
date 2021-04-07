@@ -9,10 +9,11 @@
     - [STL](#stl)
     - [undefined behavior](#undefined-behavior)
   - [Naming Conventions](#naming-conventions)
+  - [TR1 and Boost](#tr1-and-boost)
 
 ## Terminology
 ### Declaration (P17)
-A declaration tells compilers about the name and type of something, but it omits certain details.
+A declaration tells compilers about the name and type of something, but it omits certiain details.
 There are declarations:
 ```cpp
 extern int x; // object declaration
@@ -153,4 +154,12 @@ When referring to constructors and destructors in code comments, I sometimes use
 ## Naming Conventions
 - `lhs` stands for "left-hand side"
 - `rhs` stands for "right-hand side"
-  
+
+for member functions, the left-hand argument is represented by the `this` pointer, so sometiems I use the parameter name `rhs` by itself.
+
+## TR1 and Boost
+- TR1("Technical Report 1") is a specification for new functionality being added to C++'s standard library.
+This functionality takes the form of new class and function templates for things like hash tables, reference-counting smart pointers, regular expressions, and more.
+All TR1 components are in teh namespace `tr1` that's nested inside the namespace `std`
+- Boost is an organization and a web site offering portable, peer-reviewed, open source C++ libraries.
+Most TR1 functionality is based on work done at Boost, and until compiler vendors include TR1 in their C++ library distributions. 
