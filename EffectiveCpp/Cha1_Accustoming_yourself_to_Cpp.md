@@ -1,7 +1,10 @@
 # Chapter 1. Accustoming yourself to C++
 - [Chapter 1. Accustoming yourself to C++](#chapter-1-accustoming-yourself-to-c)
   - [Item 1: View C++ as a federation of languages](#item-1-view-c-as-a-federation-of-languages)
-  - [Item: Prefer consts, enumS, and inlinesS to #defineS](#item-prefer-consts-enums-and-inliness-to-defines)
+  - [Item 2: Prefer consts, enumS, and inlinesS to #defineS](#item-2-prefer-consts-enums-and-inliness-to-defines)
+    - [case 1:](#case-1)
+    - [case 2 (misuse): using `#define` to implement macros](#case-2-misuse-using-define-to-implement-macros)
+    - [the enum hack](#the-enum-hack)
 
 ## Item 1: View C++ as a federation of languages
 Exceptions required different approaches to structuring functions.
@@ -22,7 +25,8 @@ This is the generic programming part of C++.
 - the STL.
 The STL is a template library. its conventions regarding containers, iterators, algorithms, and function objects mesh beautifully.
 
-## Item: Prefer consts, enumS, and inlinesS to #defineS
+## Item 2: Prefer consts, enumS, and inlinesS to #defineS
+### case 1:
 ```cpp
 #define ASPECT_RATIO 1.653 // the symbolic name ASPECT_RATIO may never be seen by compiler.
 
@@ -66,7 +70,46 @@ private:
 
 const double CostEstimate::FudgeFactor = 1.35; // definition of static class constant; goes in impl. file
 ```
+### case 2 (misuse): using `#define` to implement macros
+Macros that look like functions but that don't incur the overhead of a function call.
+```cpp
+// call f with the maximum of a and b
+#define CALL_WITH_MAX(a, b) f((a) > (b) ? (a):(b)) 
+```
+Whenever you write this kind of macro, you have to remember to parenthesize all the arguments in the macro body.
+Otherwise you can run into trouble when somebody calls the macro with an expression.
+But even if you get that right, look at the weird things that can happen:
+```cpp
+int a = 5, b = 0;
 
+CALL_WITH_MAX(++a, b); // a is incremented twice
+CALL_WITH_MAX(++a, b+10); // a is incremented once
+```
+you can use a template for an inline function to replace using macro.
+```cpp
+template<typename T> 
+inline void callWithMax(const T& a, const T& b) // because we don't know what T is, we pass by reference-to-const
+{
+  f(a > b ? a : b);
+}
+```
+(P30)
+
+
+### the enum hack
+The values of an enumerated tye can be used where `int`s are expected.
+
+The enum hack is worth knowing about for several reasons.
+- the enum hack behaves in some ways more like a `#define` than a `const` does. 
+For example. it's legal(合法的) to take the address of a `const`,
+but it's not legal to take the address of an enum,
+and it's typically nor legal to take the address of a `#define`, either.
+If you don't want to let people get a pointer or reference to one of you rintegral constants,
+an enum is a good way to enforce that constraint.
+Though good compilers won't set aside storage for `const` objects of integral types (unless you create a pointer or reference to the object), sloppy compilers may, and you may not be willing to set aside memory for such objects.
+Like `#define`, enums never result in that kind of unnecessary memory allocation
+- the enum hack is a fundamental technique of template metaprogramming.
+  
 
 
 
