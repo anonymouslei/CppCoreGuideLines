@@ -5,6 +5,8 @@
     - [case 1:](#case-1)
     - [case 2 (misuse): using `#define` to implement macros](#case-2-misuse-using-define-to-implement-macros)
     - [the enum hack](#the-enum-hack)
+  - [Item 3: Use `const` whenever possible](#item-3-use-const-whenever-possible)
+    - [const Member Functions](#const-member-functions)
 
 ## Item 1: View C++ as a federation of languages
 Exceptions required different approaches to structuring functions.
@@ -93,6 +95,23 @@ inline void callWithMax(const T& a, const T& b) // because we don't know what T 
   f(a > b ? a : b);
 }
 ```
+This template generates a whole family of functions,
+each of which takes two objects of the same type and calls `f` with the greater of the two objects.
+There is no need to parenthesize parameters inside the function body,
+no need to worry about evaluating parameters multiple times, etc.
+FUrthermore,
+because `callWithMax` is a real function,
+it obeys scope and access rules.
+For example,
+it makes perfect sense to talk about an inline function that is private to a class.
+In general, there is just no way to do that with a macro.
+
+Given the abailability of `const`s, `enum`s, and `inline`s, your need for the preprocessor is reduced, but it is not eliminated.
+
+**Things to remember**
+- For simple constants, prefer `const` objects or enums to `#define`s.
+- For function-like macros, prefer inline functions to `#define`s.
+
 (P30)
 
 
@@ -110,6 +129,76 @@ Though good compilers won't set aside storage for `const` objects of integral ty
 Like `#define`, enums never result in that kind of unnecessary memory allocation
 - the enum hack is a fundamental technique of template metaprogramming.
   
+## Item 3: Use `const` whenever possible
+It allows you to communicate to both compilers and other programmers that a value should remain invariant.
 
+The `const` keyword is remarkable versatile.
+Outside of classes, you can use it for constants at global or namespace scope,
+as well as for objects declared `static` at file, function, or block scope.
+Inside classes, you can use it for both static and non-static data members.
+For pointers, you can specify whether the pointer itself is `const`,
+the data it points to is `const`, both, or neither
+```cpp
+char greeting[] = "Hello";
+char *p = greeting; // non-const pointer, non-const data
 
+const char *p = greeting; // non-const pointer, const data
 
+char * const p = greeting; // const pointer, non-const data
+
+const char * const p = greeting; // const pointer, const data
+```
+(memorize)This syntax isn't as capricious as it may seem.
+If the word `const` appears to the left of the asterisk,
+what's pointed to is constant;
+if the word `const` appears to the right of the asterisk,
+the pointer itself is constant;
+it isn't allowed to point to something different,
+but the thing it points to may be modified.
+if `const` appears on both sides, both are constant.
+
+When what's pointed to is constant, some programmers list `const` before the type.
+Other list it after the type but before the asterisk.
+```cpp
+void f1(const Widget * pw); // f1 takes a pointer to a constant Widget object
+void f2(Widget const *pw); // so does f2
+```
+
+STL iterators are modeled on pointers,
+so an `iterator` acts much like a `T*` pointer.
+```cpp
+std::vector<int> vec;
+
+const std::vector<int>::iterator iter = vec.begin(); // iter acts like a T* const
+*iter = 10; // OK, changes what iter points to 
+++iter; // error! iter is const
+
+std::vector<int>::const_iterator cIter = vec.begin(); // cIter acts like a const T*
+*cIter = 10; // error! *cIter is const
+++cIter; // fine, changes cIter
+```
+
+Some of the most powerful uses of `const` stem from its application to function declarations.
+Having a function return a constant value often makes it possible re reduce the incidence of client errors without giving up safety or efficiency.
+```cpp
+class Rational {...};
+
+const Rational operator*(const Rational& lhs, const Rational& rhs);
+```
+Many programmers squint when they first see this.
+Why should the result of `operator*` be a `const` object?
+Because if it weren't,
+clients would be able to commit atrocities like this:
+```cpp
+Rational a, b, c;
+
+(a * b) = c; // invoke operator= on the result of a*b
+if (a * b = c) ... // oops, meant to do a comparison!
+```
+Declaring `operator*`'s return value `const` prevents *(allowing assignments to the product of two numbers),
+and that's why it's The Right Thing TO Do.
+
+you should use both whenever you can.
+it can save you from annoying errors such as the "I meant to type '==' but I accidently typed '='" mistake we just saw.
+
+### const Member Functions
