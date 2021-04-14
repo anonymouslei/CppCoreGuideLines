@@ -202,3 +202,29 @@ you should use both whenever you can.
 it can save you from annoying errors such as the "I meant to type '==' but I accidently typed '='" mistake we just saw.
 
 ### const Member Functions
+Such member functions are important for two reasons.
+First, they make the interface of a class easier to understand.
+It is important to know which functions may modify an object and which may not.
+Second, they make it possible to work with `const` objects.
+
+```cpp
+class TextBlock {
+public:
+  const char& operator[](std::size_t position) const // operator[] for const objects
+  {return text[position];}
+
+  char& operator[](std::size_t position) // operator[] for non-const objects
+  { return text[position];} // non-const objects
+
+private:
+  std::string text;
+};
+
+// TextBlock's operator[]s can be used like this:
+TextBlock tb("Hello");
+std::cout << tb[0]; // calls non-const TextBlock::operator[]
+
+const TextBlock ctb("World");
+std::cout << ctb[0]; // calls const TextBlock::operator[]
+```
+
