@@ -8,6 +8,9 @@
       - [Incorporating a finished feature on develop](#incorporating-a-finished-feature-on-develop)
     - [Release branches](#release-branches)
       - [Creating a release branch](#creating-a-release-branch)
+    - [Hotfix branches](#hotfix-branches)
+      - [creating the hotfix branch](#creating-the-hotfix-branch)
+      - [Finishing a hotfix branch](#finishing-a-hotfix-branch)
 
 ## ref: 
 - https://www.jianshu.com/p/104fa8b15d1e
@@ -47,12 +50,12 @@ Feature branches typically exist in developer repos only, not in `origin`.
 
 #### Creating a feature branch
 branch off from the `develop` branch
-```git
+```bash
 git checkout -b myfeature develop
 ```
 #### Incorporating a finished feature on develop
 Finished features may be merged into the `develop` branch to definitely add them to the upcoming release:
-```git
+```bash
 git checkout develop # Switched to branch 'develop'
 git merge --no-ff myfeature # Updating ea1b82a..05e9557
 (Summary of changes)
@@ -83,3 +86,56 @@ until the release branch is started.
 That decision is made on the start of the release branch and is carried out by the project's rules on version number bumping.
 
 #### Creating a release branch
+```shell
+$ git checkout -b release-1.2 develop # switched to a new branch "release 1.2"
+$ ./bump-version.sh 1.2 # files modified successfully, version bumped to 1.2
+$ git commit -a -m "Bumped version number to 1.2" 
+```
+
+### Hotfix branches
+branch off from `master`, must merge back into `develop` and `master`.
+![](../Pic/git/hotfix-branches.png)
+
+When a critical bug in a production version must be resolved immediately,
+a hotfix branch may be branched off from the corresponding tag on the master branch that marks the production version.
+
+#### creating the hotfix branch
+```bash
+$ git check -b hotfix-1.2.1 master # Switched to a new branch "hotfix-1.2.1
+$ ./bump-version.sh 1.2.1 # Files modified successfully, version bumped to 1.2.1
+$ git commit -a -m "Bumped version number to 1.2.1"
+```
+Don't forget to bump the version number after branching off!
+
+Then, fix the bug and commit the fix in one or more separate commits.
+```bash
+$ git commit -m "Fixed severe production problem"
+```
+
+#### Finishing a hotfix branch
+When finished, the bugfix needs to be merged back into `master`, but also needs to be merged back into `develop`.
+
+First, update `master` and tag the release.
+```bash
+$ git checkout master # Switched to branch 'master'
+$ git merge --no-ff hotfix-1.2.1 # merge made by recursive (Summary of changes)
+$ git tag -a 1.2.1 # you might as well want to use the -s or -u <key> flags to sign your tag cryptographically
+```
+Next, include the bugfix in `develop`, too:
+```shell
+$ git checkout develop # switched to branch 'develop'
+$ git merge --no-ff hotfix-1.2.1 # merge made by recursive
+```
+
+The one exception to the rule here is that,
+when a release branch currently exists,
+the hotfix changes need to be merged into that release branch,
+instead of develop.
+Back-mergering the bugfix into the release branch will eventually result in the bugfix being merged into `develop` too, when the release branch is finished.
+
+Finially, remove the temporary branch:
+```shell
+$ git branch -d hotfix-1.2.1 # deleted branch
+```
+
+
