@@ -25,6 +25,16 @@
   - [P.8: Don't leak any resources](#p8-dont-leak-any-resources)
     - [Reason](#reason-2)
     - [Example](#example-5)
+    - [Note](#note-4)
+    - [Enforcement](#enforcement-3)
+  - [P.9: Don't waste time or space](#p9-dont-waste-time-or-space)
+    - [Note](#note-5)
+    - [Example](#example-6)
+  - [P.10: Prefer immutable data to mutable data](#p10-prefer-immutable-data-to-mutable-data)
+  - [P.11 Encapsulate messy constructs, rather than spreading through the code](#p11-encapsulate-messy-constructs-rather-than-spreading-through-the-code)
+    - [reason](#reason-3)
+    - [Example](#example-7)
+    - [Note](#note-6)
 
 ## P.1: Express ideas directly in code
 ```cpp
@@ -352,3 +362,101 @@ void f(char* name)
 ```
 
 see also: [The resource management section](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#S-resource)
+
+### Note
+A leak is colloquially "anything that isn't cleaned up".
+The more important classification is "anything that can no longer be cleaned up".
+For example, relying on system guaranteed cleanup such as file closing and memory deallocation upon process shutdown can simplify code.
+However, relying on abstractions that *implicitly* clean up can be as simple, and often safer.
+
+### Enforcement
+- Look at pointers: Classify them into non-owners (the default) and owners.
+Where feasible, replace owners with standard-library resource handles (as in teh example above).
+Alternatively, mark an owner as such using `owner` from the GSL.
+- look for naked `new` and `delete`.
+- Look for known resource allocating functions returning raw pointers (such as `fopen`, `malloc` and `strdup`).
+
+## P.9: Don't waste time or space
+### Note
+Time and space that you spend well to achieve a goal (e.g., speed of development, resource safety, or simplification of testing) is not wasted.
+"Another benefit of striving for efficiency is that the process forces you to understand the problem in more depth" - Alex Stepanov
+
+### Example 
+```cpp
+// bad
+struct X {
+  char ch;
+  int i;
+  string s;
+  char ch2;
+};
+
+X waste(const char* p)
+{
+  if (!p) throw Nullptr_error{};
+  int n = strlen(p);
+  auto buf = new char[n];
+  if (!buf) throw Allocation_error{};
+  for (int i = 0; i < n; ++i) buf[i] = p[i];
+  // .. manipulate buffer ...
+  X x;
+  x.ch = 'a';
+  x.s = string(n); // give x.s space for *p
+  for (gsl::index i = 0; i < x.size(); ++i) x.s[i] = buf[i]; // copy buf into x.s
+  delete[] buf;
+  return x;
+}
+
+void driver()
+{
+  X x = waste("Typical argument");
+  // ...
+}
+```
+
+```cpp
+void lower(zstring s)
+{
+  for (int i = 0; i < strlen(s); ++i) s[i] = tolower(s[i]);
+  // this expression will be evaluated on every iteration of the loop, which means that strlen must walk through string every loop to discover its length.
+  // While the string contents are changing, it's assumed that `toLower` will not affect the length of the string.
+  // so it's better to cache the length outside the loop and not incur that cost each iteration.
+}
+```
+
+## P.10: Prefer immutable data to mutable data
+
+## P.11 Encapsulate messy constructs, rather than spreading through the code
+### reason
+messy code is more likely to hide bugs and harder to write.
+A good interface is easier and safer to use.
+Messy, low-level code breeds more such code.
+
+### Example
+```cpp
+// this is low-level, verbose, and error-prone. For example, we 'forgot' to test for memory exhaustion. 
+int sz = 100;
+int* p = (int*) malloc(sizeof(int) * sz);
+int count = 0;
+// ...
+for(;;) {
+  // ... read an int into x, exit loop if end of file is reached ...
+  if (count == sz)
+    p = (int*) realloc(p, sizeof(int) * sz * 2);
+  p[count++] = x;
+  // ...
+}
+```
+```cpp
+vector<int> v;
+v.reserve(100);
+// ...
+for (int x; cin >> x;) {
+  // .. check that x is valid ...
+  x.push_back(x);
+}
+```
+### Note
+The standards library and the GSL are examples of this philosophy.
+such as `vector`, `span`, `lock_guard`, and `future`.
+We can and should design and implement more specialized libraries, rather than leaving the users(often ourselves) with the challenge of repreatedly getting low-level code well. 
