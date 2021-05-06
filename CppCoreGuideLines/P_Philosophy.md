@@ -20,6 +20,11 @@
     - [example](#example-3)
     - [NOTE:](#note-3)
   - [P.7: Catch run-time errors early](#p7-catch-run-time-errors-early)
+    - [Example](#example-4)
+    - [Enforcement](#enforcement-2)
+  - [P.8: Don't leak any resources](#p8-dont-leak-any-resources)
+    - [Reason](#reason-2)
+    - [Example](#example-5)
 
 ## P.1: Express ideas directly in code
 ```cpp
@@ -261,3 +266,89 @@ void use3(int m)
   int a[n] = {};
   increment2(a); // the number of elements of a need not be repeated
 }
+```
+
+### Example
+```cpp
+// don't repeatedly check the same value.
+// don't pass structured data as strings
+Date read_date(istream& is); // read date from istrema
+
+Date extract_date(const string& s); // extract date from string
+
+void user1(const string& date) // manipulate date
+{
+  auto d = extract_date(date);
+  // ...
+}
+
+void user2()
+{
+  Date d = read_date(cin);
+  // ...
+  user1(d.to_string());
+  // ...
+}
+// the date is validated twice (by the `Date` constructor) and passed as a character string (unstructured date).
+```
+
+```cpp
+// excess checking can be costly. 
+// There are cases where checking early is inefficient because you might never need the value, or might only need part of the value that is more easily checked than the whole.
+// Similarly, don't add validity checks that change the asymptotic behavior of your interface (e.g., don't add a O(n) check to an interface with an average complexity of O(1)).
+
+class Jet { // Physics says: e * e < x * x + y * y + z * z
+  float x;
+  float y;
+  float z;
+  float e;
+public:
+  Jet(float x, float y, float z, float e)
+  : x(x), y(y), z(z), e(e)
+  {
+    // sould I check here that the values are physically meaningful?
+  }
+
+  float m() const
+  {
+    // Sould I handle the degenerate case here?
+    return sqrt(x * x + y * y + z * z - e * e);
+  }
+
+  // ...
+}
+```
+
+### Enforcement
+- Look at pointers and arrays: Do range-checking early and not repeatedly
+- Look at conversions: Eliminate or mark narrowing conversions
+- Look for unchecked values coming from input
+- Look for structured data (objects of classes with invariants) being converted into strings 
+
+## P.8: Don't leak any resources
+### Reason
+Even a slow growth in resources will, over time, exhaust the availability of those resources.
+This is particularly important for long-running programs,
+but is an essential piece of respnsible programming behavior.
+
+### Example
+```cpp
+// bad
+void f(char* name)
+{
+  FILE* input = fopen(name, "r");
+  // ...
+  if (something) return; // bad: if something == true, a file handle is leaked
+}
+```
+```cpp
+void f(char* name)
+{
+  ifstream input {name};
+  // ...
+  if (something) return; // OK: no leak
+  // ...
+}
+```
+
+see also: [The resource management section](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#S-resource)
