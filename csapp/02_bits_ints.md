@@ -11,8 +11,21 @@
       - [Values for different word sizes](#values-for-different-word-sizes)
       - [Unsigned & Signed Numeric Values](#unsigned--signed-numeric-values)
     - [Conversion, casting](#conversion-casting)
+      - [Signed vs. Unsigned in C](#signed-vs-unsigned-in-c)
+      - [casting surprises](#casting-surprises)
+      - [Summary Casting signed <-> unsigned: basic rules](#summary-casting-signed---unsigned-basic-rules)
     - [Expanding, truncating](#expanding-truncating)
+      - [sign extension](#sign-extension)
+      - [Truncation](#truncation)
+      - [Summary: Expanding, Truncating: Basic Rules](#summary-expanding-truncating-basic-rules)
     - [Addition, negation, multiplication, shifting](#addition-negation-multiplication-shifting)
+      - [unsigned addition](#unsigned-addition)
+      - [Integer Addition](#integer-addition)
+      - [Unsigned addition](#unsigned-addition-1)
+      - [two's complement addition](#twos-complement-addition)
+      - [multiplication](#multiplication)
+      - [unsigned multiplication in C](#unsigned-multiplication-in-c)
+      - [signed multiplication](#signed-multiplication)
     - [Summary](#summary)
   - [Representations in memory, pointers, strings](#representations-in-memory-pointers-strings)
 
@@ -75,10 +88,94 @@
   - same encodings for nonnegative values
 
 ### Conversion, casting
+#### Signed vs. Unsigned in C
+- Constants
+  - by default are considered to be signed
+  - unsigned if have "U" as suffix, or if too big to be signed
+- casting
+  - explicit casting between signed & unsigned same as U2T and T2U
+  ```
+  int tx, ty;
+  unsigned ux, uy;
+  tx = (int) ux;
+  uy = (unsigned) ty;
+  ```
 
-<!-- TODO: S31 -->
+#### casting surprises
+- expression evaluation
+  - if there is a mix of unsigned and signed in single expression, **signed values implicitly cast to unsigned**
+
+#### Summary Casting signed <-> unsigned: basic rules
+- bit pattern is maintained
+- but reinterpreted
+- can have unexpected effects: adding or subtracting 2^w
+- **expression containing signed and unsigned int**
+  - **int is cast to unsigned!!!**
+
 ### Expanding, truncating
+#### sign extension
+- task:
+  - given w-bit signed integer x
+  - Convert it to w+k-bit integer with same value
+- Rule:
+  - Make k copies of sign bit
+
+#### Truncation
+- task:
+  - given k+w-bit signed or unsigned integer X
+  - Convert it to w-bit integer X' with same value for "small enough" X
+- Rule:
+  - Drop top k bits
+
+#### Summary: Expanding, Truncating: Basic Rules
+- Expanding (e.g., short int to int)
+  - unsigned: zeros added
+  - signed: sign extension
+  - Both yield expected result
+- Truncating (e.g., unsigned to unsigned short)
+  - Unsigned/signed: bits are truncated
+  - Result reinterpreted
+  - unsigned: mod operation
+  - Signed: similar to mod
+
 ### Addition, negation, multiplication, shifting
+#### unsigned addition
+- operands: w bits
+- true Sum: w+1 bits
+- discard carry: w bits
+#### Integer Addition
+- integer addition
+  - 4-bit integers u, v
+  - compute true sum Add_4(u, v)
+  - values increase linearly with u and v
+  - forms planar surface
+#### Unsigned addition
+- Wraps around
+  - if true sum >= 2^w
+  - at most once
+#### two's complement addition
+- true sum requires w+1 bits
+- drop off MSB
+- treat remaining bits as 2's comp. integer
+- wraps around 
+  - if sum >= 2^(w-1)
+    - becomes negative
+  - if sum < -2^(w-1)
+    - becomes positive
+
+#### multiplication
+#### unsigned multiplication in C
+- standard multiplication function
+  - ignores high order w bits
+- Implements Modular Arithmetic
+  - UMult_w(u, v) = u * v mod 2^w
+#### signed multiplication 
+- Standard Multiplication Function
+  - ignores high order w bits
+  - lower bits are the same
+
+<!-- TODO: S23 -->
+
 ### Summary
 ## Representations in memory, pointers, strings
 
