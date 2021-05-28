@@ -26,8 +26,17 @@
       - [multiplication](#multiplication)
       - [unsigned multiplication in C](#unsigned-multiplication-in-c)
       - [signed multiplication](#signed-multiplication)
+      - [Power of 2 multiply with shift](#power-of-2-multiply-with-shift)
+      - [Unsigned Power of 2 divide with shift](#unsigned-power-of-2-divide-with-shift)
+      - [Signed power of 2 divide with shift](#signed-power-of-2-divide-with-shift)
+      - [Correct Power of 2 divide 需要看一下书，没看懂](#correct-power-of-2-divide-需要看一下书没看懂)
+      - [Negation: Complement & Increment](#negation-complement--increment)
     - [Summary](#summary)
+      - [Arithmetic: Basic Rules](#arithmetic-basic-rules)
   - [Representations in memory, pointers, strings](#representations-in-memory-pointers-strings)
+    - [byte-oriented memory organization](#byte-oriented-memory-organization)
+    - [Machine Words](#machine-words)
+    - [byte Ordering](#byte-ordering)
 
 ## Respresenting information as bits
 - Byte = 8 bits
@@ -174,11 +183,78 @@
   - ignores high order w bits
   - lower bits are the same
 
-<!-- TODO: S23 -->
+#### Power of 2 multiply with shift
+- operation
+  - u << k gives u * 2^k
+  - Both signed and unsigned
+- Most machines shift and add faster than multiply
+  - compiler generates this code automatically
+
+#### Unsigned Power of 2 divide with shift
+- u >> k gives [u / 2^k]
+- uses logical shift
+
+#### Signed power of 2 divide with shift
+- x >> k gives [x / 2^k]
+- uses arithmetic shift
+- ? rounds wrong direction when x < 0 没看懂这个是为什么
+
+#### Correct Power of 2 divide 需要看一下书，没看懂
+
+#### Negation: Complement & Increment
+- Negate through complement and increase
+  ~x + 1 = -x
+- canonical counter example
+  - x = 0
+  - x = TMin
+
 
 ### Summary
-## Representations in memory, pointers, strings
+#### Arithmetic: Basic Rules
+- Addition:
+  - unsigned/signed: Normal addition followed by truncate, same operation on bit level (这里说的mod是超界的情况嘛？)
+  - Unsigned: addition mod 2^w
+    - Mathematical addition + possible subtraction of 2^w
+  - signed: modified addition mod 2^w
+    - Mathematical addition + possible addition or subtraction of 2^w
+- Multiplication:
+  - Unsigned/signed: multiplication mod 2^w
+  - signed: modified multiplication mod 2^w 
 
+## Representations in memory, pointers, strings
+### byte-oriented memory organization
+- programs refer to data by address
+  - conceptually, envision it as a very large array of bytes
+    - In reality, it's not, but can think of it that way
+  - An address is like an index into that array
+
+- Note: system provides private address spaces to each "process"
+  - Think of a process as a program being executed
+  - so, a program can clobber its own data, but not that of others
+
+### Machine Words
+- Any given computer has a "Word Size"
+  - Nominal size of integer-valued data (整数价值的数据) and of addresses
+  - until recently, most machines used 32 bits(4 bytes) as word size
+    - limits address to 4GB (2^32 bytes)
+  - Increasingly, machines have 64-bit word size
+    - potentially, could have 18 EB of addressable memory
+  - Machines still support multiple data formats
+    - fractions or multiples of word size
+    - always integral number of bytes
+- Addresses specify byte locations
+  - address of first byte in word
+  - addresses of successive words (连续的字) differ by 4 or 8 (64-bit)
+
+### byte Ordering
+- big endian: Sun, PPC Mac, **Internet**
+  - least significant byte has highest address
+  - 看起来更直观
+- little endian: **x86**, ARM processors runing Android, IOS and Linux
+  - least significant byte has lowest address
+  - 存储的时候更符合逻辑。先把低位存起来存在低地址，再把高位存起来，存到高地址。
+
+<!-- TODO: S43 -->
 &, |, ^, ~ (ampersand, vertical bar, caret and tilde)
 S24: B2U: from a bit level representation to an unsigned number of some bit pattern
 
