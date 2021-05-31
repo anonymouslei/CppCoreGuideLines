@@ -7,6 +7,7 @@
     - [Shift Operations](#shift-operations)
   - [Integers](#integers)
     - [Representation: unsigned and signed](#representation-unsigned-and-signed)
+      - [Encoding integers](#encoding-integers)
       - [Numeric Ranges](#numeric-ranges)
       - [Values for different word sizes](#values-for-different-word-sizes)
       - [Unsigned & Signed Numeric Values](#unsigned--signed-numeric-values)
@@ -31,12 +32,20 @@
       - [Signed power of 2 divide with shift](#signed-power-of-2-divide-with-shift)
       - [Correct Power of 2 divide 需要看一下书，没看懂](#correct-power-of-2-divide-需要看一下书没看懂)
       - [Negation: Complement & Increment](#negation-complement--increment)
+      - [note](#note)
     - [Summary](#summary)
       - [Arithmetic: Basic Rules](#arithmetic-basic-rules)
   - [Representations in memory, pointers, strings](#representations-in-memory-pointers-strings)
     - [byte-oriented memory organization](#byte-oriented-memory-organization)
     - [Machine Words](#machine-words)
     - [byte Ordering](#byte-ordering)
+    - [Examining Data Representations](#examining-data-representations)
+    - [representing strings](#representing-strings)
+  - [note:](#note-1)
+    - [abs:](#abs)
+    - [negate :](#negate-)
+    - [approximately](#approximately)
+    - [note](#note-2)
 
 ## Respresenting information as bits
 - Byte = 8 bits
@@ -72,6 +81,9 @@
 
 ## Integers
 ### Representation: unsigned and signed
+#### Encoding integers
+- unsigned: B2U: from a bit level representation to an unsigned number of some bit pattern
+- two's complement: B2T
 #### Numeric Ranges
 - Unsigned Values
   - UMin = 0
@@ -208,6 +220,13 @@
   - x = 0
   - x = TMin
 
+#### note
+it takes three clock cycles to do multiplication.
+shift needs one clock cycles
+
+it takes 30 clock cycles to do divide
+
+
 
 ### Summary
 #### Arithmetic: Basic Rules
@@ -250,21 +269,43 @@
 - big endian: Sun, PPC Mac, **Internet**
   - least significant byte has highest address
   - 看起来更直观
+  - it turns out that increasingly it's getting hard to find big-Endian machines
 - little endian: **x86**, ARM processors runing Android, IOS and Linux
   - least significant byte has lowest address
   - 存储的时候更符合逻辑。先把低位存起来存在低地址，再把高位存起来，存到高地址。
 
-<!-- TODO: S43 -->
-&, |, ^, ~ (ampersand, vertical bar, caret and tilde)
-S24: B2U: from a bit level representation to an unsigned number of some bit pattern
+### Examining Data Representations
+- casting pointer to unsigned char * allows treatment as a byte array
+```c
+typedef unsigned char *pointer;
 
-until: 25:58
+void show_bytes(pointer start, size_t len) {
+  size_t i;
+  for (i = 0; i < len; i++)
+    printf("%p\t0x%.2x\n", start+i, start[i]);
+    // %p: print pointer
+    // %x: print hexadecimal
+  printf("\n");
+}
 
-<!-- Then I'll treat themn as a signed case,  -->
-if either of them is unsigned, Then I will convert the other one to be an unsigned number and do the operation.
+int a = 15213;
+printf("int a = 15213;\n");
+show_bytes((pointer) &a, sizeof(int));
+```
+- different compilers & machines assign different locations to objects, even get different results each time run program
 
+### representing strings
+- strings in C
+  - represented by array of characters
+  - each character encoded in ASCII format
+    - standard 7-bit encoding of character set
+    - Character "0" has code 0x30, digit i has code 0x30+i
+  - string should be null-terminated
+    - final character = 0
+
+## note:
+### abs:
 可以使用对称性来计算绝对值
-
 ```c
 if (x < 0)
     return -x;
@@ -274,14 +315,7 @@ else
 if we input TMin, it will returns TMin.
 It is always a corner case and whenever we do program testing.
 
-UMax = 2*TMax + 1
-
-it takes three clock cycles to do multiplication.
-shift needs one clock cycles
-
-it takes 30 clock cycles to do divide
-
-negate :
+### negate :
 1. complement it meaning flip all the bits
 2. add one to that
 
@@ -292,10 +326,10 @@ negate :
  0 1 1 0 (result)
  ```
 
+### approximately
 2^10 which is 1024 which is approximately equal to 10^3.
 What it means is that 10 bits worth of number is about the same as three decimal digits.
 So for example 2^20 is around 10^6.
 
-it turns out that increasingly it's getting hard to find big-Endian machines
-
+### note
 ux > -1 // 无符号的数会将-1转化为成无符号数，-1的二进制都是1，是最大的无符号数。所以ux>-1恒不成立
