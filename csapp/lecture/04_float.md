@@ -17,3 +17,8 @@ it has a nice smooth transition from denorm to normalize.
 S26: every time you increase the exponent by one, the numbers are spaced twice as far apart as teh previous.
 the numbers that were represented by the previous exponent.
 
+S34 didn't understand
+50min
+
+puzzles:
+float will lost some bits. because it only has 23 bits. but int has 32 bits.
