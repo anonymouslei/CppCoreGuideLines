@@ -156,8 +156,7 @@ int bitXor(int x, int y) {
  */
 int tmin(void) {
 
-  return 2;
-
+  return (1<<31);
 }
 //2
 /*
@@ -168,7 +167,9 @@ int tmin(void) {
  *   Rating: 1
  */
 int isTmax(int x) {
-  return 2;
+  // 思路：最大的补码为7fff(0111),+1之后变为(1000), 相加之后正好全为1111，取反为0000
+  // &的后半部分是为了区分1111这种特殊情况。-1的补码为ffff,+1之后会变为0000
+  return !(~((x+1)+ x))&(!!(x+1));
 }
 /* 
  * allOddBits - return 1 if all odd-numbered bits in word set to 1
