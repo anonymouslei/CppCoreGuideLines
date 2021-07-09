@@ -192,6 +192,8 @@ TODO:新版S43页看不懂
   - put resulting binary in file p
 1. C program (p1.c p2.c) (test)
    1. compiler (`gcc -Og -S`)  
+   2. obtain with command `gcc -Og -S sum.c`
+   3. produces file sum.s
 2. Asm program (p1.s p2.s) (test)
    1. Assembler (`gcc -c or as`)
 3. Object program (p1.o p2.0) (binary)
