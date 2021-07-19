@@ -75,4 +75,48 @@ This is a pretty typical pattern,
 you move some value into a register and then you into %rax is ver common.
 And then you do some arithmetic operation with that register as a destination to kind of update it.
 
-26:16
+S28: conditional move,
+the basic idea is I am going to compute both them 'then' and the 'else' the values they'd produce.
+And only after that I choose which one I use.
+It seems wasteful but it actually turns out to be more efficient, If there are fairly simple computations.
+
+A modern processor is a little like an oil tanker sailing in the sea, meaning that it plows along in a certain direction.
+And it really is hard to get it to stop or to turn.
+Think of an instruction sequences you know the ocean of code that you're cruising through, 
+And these things can just fly through a straight sequence of code.
+Because they are do pipelining.
+Meaning they start bringing in parts of one instruction before they're done with the next. 
+And actually go up tp depths of 20 or more instructions deep of how far had they're working sort of fetching forward and future instructions.
+While finishing up the ones that still remain.
+
+But all of a sudden you come and then what happens when they hit a branch.
+They'll try to guess, it's called branch prediction,
+and guess where is this kind of branch going to go.
+where it you know well the conditional branch will be taken or is it going to fall through,
+they are good at it 98% of the time.
+and as long as they get it right it is very efficient.
+But if they get it wrong it's as if you have to stop the thing back it up turn the other way start again.
+And that can take 40 instructions 40 clock cycles say to do in bad situations.
+
+So these conditional move instructions it turns out it's much easier to just plow through compute both.
+and then at the last minute all you have to do is move a value into a register or not.
+And that doesn't require stopping the whole processor and making this turn.
+
+S48: ja: jump above
+If x was either less than zero or greater than 6. It would go to default case.
+
+that lets me index into a table and extract out of that an address and then jump to that address.
+
+S53 TODO: do not understand
+
+the question is of what if it's a negative number for your case.
+It will typically add a bias to it effectively.
+so that whatever your lowest value was become zero,
+or it'll do something like that to avoid having to do negative indexing.
+
+if you only have case 0 and case 10000, so it still create a million entry table for just two cases.
+so it will trun it into if else code.
+
+It knows in advance all the values and it will actually set up a tree of if-else.
+it does it with a logarithmic number of tests rather than a linear number of tests.
+
