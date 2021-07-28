@@ -1,6 +1,136 @@
 # Machine-Level Programming II: control
+- [Machine-Level Programming II: control](#machine-level-programming-ii-control)
+  - [Recall](#recall)
+    - [why use LEA?](#why-use-lea)
+    - [sidebar: instruction suffixes](#sidebar-instruction-suffixes)
+  - [Control](#control)
+    - [processor state (x86-64, Partial)](#processor-state-x86-64-partial)
+    - [condition codes (Implicit setting)](#condition-codes-implicit-setting)
+    - [condition codes (explicit setting: compare)](#condition-codes-explicit-setting-compare)
+    - [condition codes (explicit setting: test)](#condition-codes-explicit-setting-test)
+    - [condition codes (explicit reading: set)](#condition-codes-explicit-reading-set)
+  - [Conditional branches](#conditional-branches)
+    - [jumping](#jumping)
+    - [using conditional moves](#using-conditional-moves)
+  - [Loops](#loops)
+  - [switch statements](#switch-statements)
+
+## Recall
+### why use LEA?
+- CPU designers' intended use: calculate a pointer to an object
+  - an array element, perhaps
+  - For instance, to pass just one array element to another function
+
+ | assemble                 | C equivalent    |
+ | ------------------------ | --------------- |
+ | lea(%rbx, %rdi, 8), %rax | rax = &rbx[rdi] |
+- compiler authors like to use it for ordinary arithmetic
+  - it can do complex calculations in one instruction
+  - it's one of the only three-operand instructions the x86 has
+  - it doesn't touch the condition codes (we'll come back to this)
+
+  | assembly                 | C equivalent  |
+  | ------------------------ | ------------- |
+  | lea(%rbx, %rbx, 2), %rax | rax = rbx * 3 |
+
+
+### sidebar: instruction suffixes
+
+- mose x86 instructions can be written with or without a suffix
+  - imul %rcx, %rax
+  - imulq % rcx, %rax (there is no difference!)
+
+- the suffix indicates the operation size
+  - b=byte, w=short, l=int, q=long
+  - if present, must match register names
+- assembly output from the compiler (gcc -S) usually has suffixes
+- disassembly dumps (objdump -d, gdb 'disas') usually omit suffixes
+- intel's manuals always omit the suffixes
+
 ## Control
+### processor state (x86-64, Partial)
+- information about currently executing program
+  - temporary data (%rax, ...)
+  - location of runtime stack (%rsp)
+  - location of current code control point (%rip, ...)
+  - status of recent tests (CF, ZF, SF, OF) condition codes
+
+### condition codes (Implicit setting)
+- single bit registers
+  - CF Carry Flag (for unsigned)
+  - SF sign flag (for signed)
+  - ZF zero flag
+  - OF Overflow flag (for signed)
+- implicitly set (as side effect) of arithmetic operations
+  - example: addq Src, Dest <-> t = a+b
+  - CF set: if carry/borrow out from most significant bit(unsigned overflow)
+  - ZF set: if t == 0
+  - SF set: if t < 0 (as signed)
+  - OF set: if two's-complement (signed) overflow
+(a > 0 && b > 0 && t < 0) || (a < 0 && b < 0 && t>=0)
+- not set by leaq instruction
+
+### condition codes (explicit setting: compare)
+- explicit setting by compare instruction
+  - cmpq Src2, Src1
+  - cmpq b, a like computing a - b without setting destination
+
+  - CF set: if carry/borrow out from most significant bit (used for unsigned comparisons)
+  - ZF set: if a==b
+  - SF set: if (a-b) < 0 (as signed)
+  - OF set: if two's-complement (signed) overflow 
+  (a > 0 && b < 0 && (a-b)<0 || (a<0 && b>0 && (a-b)>0)
+
+### condition codes (explicit setting: test)
+- explicit setting by test instruction
+  - testq src2, src1
+    - testq b, a like computing a&b without setting destination
+  - sets condition codes based on value of src1 & src2
+  - useful to have one of the operands be a mask
+
+  - ZF set when a&b == 0
+  - SF set when a&b < 0
+  - very often: testq %rax, %rax
+
+### condition codes (explicit reading: set)
+- explicit reading by set instructions
+  - setX Dest: set low-order byte of destination Dest to 0 or 1 based on combinations of condition codes
+  - does not alter remaining 7 bytes of Dest
+
+| SetX  | Condition    | Description               |
+| ----- | ------------ | ------------------------- |
+| sete  | ZF           | Equal/zero                |
+| setne | ~ZF          | not equal / not zero      |
+| sets  | SF           | Negative                  |
+| setns | ~SF          | nonnegative               |
+| setg  | ~(SF^OF)&~ZF | greater (signed)          |
+| setge | ~(SF^OF)     | greater or equal (signed) |
+| setl  | SF^OF        | less(signed)              |
+| setle | (SF^OF)\|ZF  | Less or equal (signed)    |
+| seta  | ~CF&~ZF      | above(unsigned)           |
+| setb  | CF           | below(unsigned)           |
+
 ## Conditional branches
+### jumping
+- jX instructions
+  - jump to different part of code depending on condition codes
+  - implicit reading of condition codes
+
+### using conditional moves
+- conditional move instructions
+  - instruction supports:
+    - if (Test) Dest <- Src
+  - supported in post-1995 x86 processors
+  - GCC tries to use them 
+    - but, only when known to be safe
+
+- why
+  - branches are very disruptive to instruction flow through pipelines
+  - conditional moves do not require control transfer
+(S28)
+
+
+
 ## Loops
 ## switch statements
 
