@@ -131,33 +131,71 @@ we add the new library to the executable, and add `MathFunctions` as an include 
       option(USE_MYMATH "Use tutorial provided math implementation" ON)
 
       ``` 
-   this option will be displayed in the  `cmake-gui` and `ccmake` with a default value of `ON` that can be changed by the user.
-   This setting will be stored in the cache so that the user does not need to set the value each time they run CMake on a build directory.
+      this option will be displayed in the  `cmake-gui` and `ccmake` with a default value of `ON` that can be changed by the user.
+      This setting will be stored in the cache so that the user does not need to set the value each time they run CMake on a build directory.
    2. make building and linking the `MathFunctions` library conditional. To do this we change the end of the top-level `CMakeLists.txt` file to look like the following.
+      ```
+      if(USE_MYMATH)
+         add_subdirectoty(MathFunctions)
+         list(APPEND EXTRA_LIBS MathFunctions)
+         lsit(APPEND EXTRA_INCLUDES "{PROJECT_SOURCE_DIR}/MathFunctions")
+      endif()
+
+      # add the executable
+      add_executable(Tutorial tutorial.cxx)
+
+      target_link_libraries(Tutorial PUBLIC ${EXTRA_LIBS})
+
+      # add the binary tree to the search path for include files 
+      # so that we will find TutorialConfig.h
+      target_include_directories(Tutorial PUBLIC 
+      "${PROJECT_BINARY_DIR}"
+      ${EXTRA_INCLUDES})
+
+      ```
+      Note the use of the variable `EXTRA_LIBS` to collect up any optional libraries to later be linked into the executable.
+      the variable `EXTRA_LIBS` is used similary for optional header files.
+      This is a classic approach when dealing with many optional components.
+
+   3. changes to the source code.
+      1. in `tutorial.cxx`, include the `MathFunctions.h` header if we need it:
+         ```
+         # tutorial.cxx
+         #ifdef USE_MYMATH
+         #  include "MathFunctions.h"
+         #endif
+         ```
+      2. in the same file, make `USE_MYMATH` control which square root function is used:
+         ```
+         #ifdef USE_MYMATH
+            const double outputValue = mysqrt(inputValue);
+         #else
+            const double outputValue = sqrt(inputValue);
+         #endif
+         ```
+   4. since the source code now requires `USE_MYMATH` we can add it to `TutorialConfig.h.in` with the following line:
+      ```
+      # TUtorialConfig.h.in
+      #cmakedefine USE_MYMATH
+      ```
+4. if you want to change the option from the command-line, try:
    ```
-   if(USE_MYMATH)
-      add_subdirectoty(MathFunctions)
-      list(APPEND EXTRA_LIBS MathFunctions)
-      lsit(APPEND EXTRA_INCLUDES "{PROJECT_SOURCE_DIR}/MathFunctions")
-   endif()
-
-   # add the executable
-   add_executable(Tutorial tutorial.cxx)
-
-   target_link_libraries(Tutorial PUBLIC ${EXTRA_LIBS})
-
-   # add the binary tree to the search path for include files 
-   # so that we will find TutorialConfig.h
-   target_include_directories(Tutorial PUBLIC 
-   "${PROJECT_BINARY_DIR}"
-   ${EXTRA_INCLUDES})
-
+   cmake ../Step2 -DUSE_MYMATH=off
    ```
-
-
-
-
+   
 ## step 3: adding usage requirements for a library
+Usage requirements allow for far better control over a library or executable's link and include line while also giving more control over the transitive property of targets inside CMake.
+The primary commands that leverage usage requirements are:
+- target_compile_definitions()
+- target_compile_options()
+- target_include_directories()
+- target_link_libraries()
+
+we first state that anybody linking to `MathFunctions` needs to include the current source directory, while `MathFunctions` itself doesn't.
+So this can become an `INTERFACE` usage requirement.
+`INTERFACE` means things that consumers require but the producer doesn't.
+Add the following lines to the end of `MathFunctions/CMakeLists.txt`.
+
 ## Step 4: Installing and testing
 ## step 5: adding system introspection
 ## step 6: adding a custom command and generated file
