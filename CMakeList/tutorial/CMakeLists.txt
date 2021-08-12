@@ -14,7 +14,7 @@ add_subdirectory(MathFunctions)  # step 2
 if(USE_MYMATH) # step 2
   add_subdirectory(MathFunctions)
   list(APPEND EXTRA_LIBS MathFunctions)
-  list(APPEND EXTRA_INCLUDES "${PROJECT_SOURCE_DIR}/MathFunctions")
+  # list(APPEND EXTRA_INCLUDES "${PROJECT_SOURCE_DIR}/MathFunctions")  # remove in step 3
 endif()
 
 # add the executable
@@ -24,7 +24,7 @@ add_executable(Tutorial tutorial.cxx)
 target_include_directories(Tutorial PUBLIC
                            "${PROJECT_BINARY_DIR}"  # step 1
                           #  "${PROJECT_SOURCE_DIR}/MathFunctions"  # step 2
-                          ${EXTRA_INCLUDES}  # step 2
+                          # ${EXTRA_INCLUDES}  # step 2  # remove in step 3
                            )
 
 option(USE_MYMATH "Use tutorial provided math implementation" ON)  # step 2

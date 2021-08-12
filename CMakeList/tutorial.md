@@ -7,6 +7,7 @@
   - [step 2: adding a library](#step-2-adding-a-library)
   - [step 3: adding usage requirements for a library](#step-3-adding-usage-requirements-for-a-library)
   - [Step 4: Installing and testing](#step-4-installing-and-testing)
+    - [install rules](#install-rules)
   - [step 5: adding system introspection](#step-5-adding-system-introspection)
   - [step 6: adding a custom command and generated file](#step-6-adding-a-custom-command-and-generated-file)
   - [step 7: packaging an installer](#step-7-packaging-an-installer)
@@ -90,7 +91,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
    ```
 3. then call that build system to actually compile/link the project
    ```
-   cmake --build
+   cmake --build .
    ```
 
 ## step 2: adding a library
@@ -183,7 +184,10 @@ we add the new library to the executable, and add `MathFunctions` as an include 
    cmake ../Step2 -DUSE_MYMATH=off
    ```
    
-## step 3: adding usage requirements for a library
+## step 3: adding usage requirements for a library 
+<!-- TODO: not understand -->
+我的理解是在mathfunctions的cmakelists加入几句话，就可以在主cmakelist中删除掉关于extra_include的语句
+
 Usage requirements allow for far better control over a library or executable's link and include line while also giving more control over the transitive property of targets inside CMake.
 The primary commands that leverage usage requirements are:
 - target_compile_definitions()
@@ -196,7 +200,59 @@ So this can become an `INTERFACE` usage requirement.
 `INTERFACE` means things that consumers require but the producer doesn't.
 Add the following lines to the end of `MathFunctions/CMakeLists.txt`.
 
+```
+# MathFunctions/CMakeLists.txt
+target_include_directories(MathFunctions 
+INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}
+)
+```
+Now that we've specified usage requirements for `MathFunctions` we can safely remove our uses of the `EXTRA_INCLUDES` variable from the top-level `CMakeLists.txt` here:
+```
+#CMakeLists.txt
+if(USE_MYMATH)
+  add_subdirectory(MathFunctions)
+  list(APPEND EXTRA_LIBS MathFunctions)
+endif()
+```
+and here:
+```
+target_include_directories(Tutorial PUBLIC
+   "${PROJECT_BINARY_DIR}"
+   )
+```
+once this is done, run the `cmake` executable or the `cmake-gui` to configure the project and then build it with your build tool or by using `cmake --build .` from the build directory.
+
 ## Step 4: Installing and testing
+### install rules
+The install rules ar efairly simple: for `MathFunctions` we want to install the library and header file and for the application we want to install the executable and configured header.
+1. So to the end of `MathFunctions/CMakeLists.txt` we add:
+   ```
+   # MathFunctions/CMakeLists.txt
+   install(TARGETS MathFunctions DESTINATION lib)
+   install(FILES MathFunctions.h DESTINATION include)
+   ```
+2. to the end of the top-level `CMakeLists.txt` we add:
+   ```
+   #CMakeLists.txt
+   install(TARGETS Tutorial DESTINATION bin)
+   install(FILES "${PROJECT_BINARY_DIR}/TutorialConfig.h"
+      DESTINATION include
+      )
+   ```
+   That is all that is needed to create a basic local install of the tutorial.
+3. run the install step by using the `install` option of the cmake command from the command line. For multi-configuration tools, don't forget to use the `--config` argument to specify the configuration.
+   If using an IDE, simply build the `INSTALL` target.
+   This step will install the approprate header files, libraries, and executables.
+   ```
+   cmake --install .
+   ```
+   The CMake variable `CMAKE_INSTALL_PREFIX` is used to determine the root of where the files will be installed.
+   If using the `cmake --install` command, the installation prefix can be overridden via the `--prefix` argument.
+   ```
+   cmake --install . --prefix "/home/myuser/installdir"
+   ```
+4. Navigate to the install directory and verify that the installed Tutorial runs. 
+
 ## step 5: adding system introspection
 ## step 6: adding a custom command and generated file
 ## step 7: packaging an installer
