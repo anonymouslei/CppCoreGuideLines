@@ -1,13 +1,13 @@
-#ifdef USE_MYMATH  // step 2
-#  include "MathFunctions.h"
-#endif
-
 // A simple program that computes the square root of a number
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
 #include <string>
 #include "TutorialConfig.h"  // STEP 1
+
+#ifdef USE_MYMATH  // step 2
+#  include "MathFunctions.h"
+#endif
 
 int main(int argc, char* argv[])
 {

@@ -8,9 +8,15 @@ project(Tutorial VERSION 1.0)  # step 1
 set(CMAKE_CXX_STANDARD 11)  # step 1
 set(CMAKE_CXX_STANDARD_REQUIRED True)  # step 1
 
-# add the MathFunctions library
-add_subdirectory(MathFunctions)  # step 2
+option(USE_MYMATH "Use tutorial provided math implementation" ON)  # step 2
 
+# configure a header file to pass some of the CMake settings to the source code
+configure_file(TutorialConfig.h.in TutorialConfig.h)
+
+# add the MathFunctions library
+# add_subdirectory(MathFunctions)  # step 2
+
+# add the MathFunctions library
 if(USE_MYMATH) # step 2
   add_subdirectory(MathFunctions)
   list(APPEND EXTRA_LIBS MathFunctions)
@@ -19,6 +25,7 @@ endif()
 
 # add the executable
 add_executable(Tutorial tutorial.cxx)
+target_link_libraries(Tutorial PUBLIC ${EXTRA_LIBS})
 
 # make sure to add the executable declarations above the call to target_include_directories
 target_include_directories(Tutorial PUBLIC
@@ -27,6 +34,8 @@ target_include_directories(Tutorial PUBLIC
                           # ${EXTRA_INCLUDES}  # step 2  # remove in step 3
                            )
 
-option(USE_MYMATH "Use tutorial provided math implementation" ON)  # step 2
-
-configure_file(TutorialConfig.h.in TutorialConfig.h)
+# add the install targets
+install(TARGETS Tutorial DESTINATION bin)  # step 4
+install(FILES "${PROJECT_BINARY_DIR}/TutorialConfig.h"  # step 4
+       DESTINATION include  # step 4
+       )
