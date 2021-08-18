@@ -8,6 +8,7 @@
   - [step 3: adding usage requirements for a library](#step-3-adding-usage-requirements-for-a-library)
   - [Step 4: Installing and testing](#step-4-installing-and-testing)
     - [install rules](#install-rules)
+    - [Testing support](#testing-support)
   - [step 5: adding system introspection](#step-5-adding-system-introspection)
   - [step 6: adding a custom command and generated file](#step-6-adding-a-custom-command-and-generated-file)
   - [step 7: packaging an installer](#step-7-packaging-an-installer)
@@ -252,6 +253,48 @@ The install rules ar efairly simple: for `MathFunctions` we want to install the 
    cmake --install . --prefix "/home/myuser/installdir"
    ```
 4. Navigate to the install directory and verify that the installed Tutorial runs. 
+
+### Testing support
+At the end of the top-level `CMakeLists.txt` file we can enable testing and then add a number of basic tests to verify that the application is working correctly.
+```
+#CMakeLists.txt
+enable_testing()
+# does the application run
+add_test(NAME Runs COMMAND Tutorial 25)
+# this test simply verifies that the application runs, does not segfault or otherwise crash, and has a zero return value. this is the basic form of a CTest test.
+
+# does the usage message work?
+add_test(NAME Usage COMMAND Tutorial)
+set_tests_properties(Usage
+    PROPERTIES PASS_REGULAR_EXPRESSION "Usage:.*number"
+    )
+# this test makes use of the PASS_REGULAR_EXPRESSION test property to verify that the output of the test contains certain strings. In this case, verifying that the usage message is printed when an incorrect number of arguments are provided.
+
+# define a function to simplify adding tests
+function(do_test target arg result)
+    add_test(NAME Comp${arg} COMMAND ${target} ${arg})
+    set_tests_properties(Comp${arg}
+    PROPERTIES PASS_REGULAR_EXPRESSION ${result}
+    )
+endfunction(do_test)
+
+# do a bunch of result based tests
+do_test(Tutorial 4 "4 is 2")
+do_test(Tutorial 9 "9 is 3")
+do_test(Tutorial 5 "5 is 2.236")
+do_test(Tutorial 7 "7 is 2.645")
+do_test(Tutorial 25 "25 is 5")
+do_test(Tutorial -25 "-25 is [-nan|nan|0]")
+do_test(Tutorial 0.0001 "0.0001 is 0.01")
+
+# we have a function called do_test that runs the application and verifies that the computed square root is correct for given input.
+For each invocation of do_test, another test is added to the project with a name, input, and expected results based on the passed arguments.
+```
+
+1. Rebuild the application and then cd to the binary directory
+2. run the ctest executable: `ctest -N` and `ctest -VV`.
+For multi-config generators, the configuration type must be specified. To run tests in Debug mode, for example, use `ctest -C Debug -VV` from the build directory.
+Alternatively, build the `RUN_TESTS` target from the IDE.
 
 ## step 5: adding system introspection
 ## step 6: adding a custom command and generated file
