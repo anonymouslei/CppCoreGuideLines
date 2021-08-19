@@ -297,8 +297,127 @@ For multi-config generators, the configuration type must be specified. To run te
 Alternatively, build the `RUN_TESTS` target from the IDE.
 
 ## step 5: adding system introspection
+Let us consider adding some code to our project that depends on features the target platform may not have. 
+For this example, we will add some code that depends on whether or not the target platform has the `log` and `exp` functions.
+Of course almost every platform has these functions but for this tutorial assume that they are not common.
+
+If the platform has `log` and `exp` then we will use them to compute the square root in the `mysqrt` function. 
+1. we first test for the availability of these functions using the `checkSymbolExists` module in `MathFunctions/CMakeLists.txt`.
+On some platforms, we will need to link to the `m` library.
+If `log` and `exp` are not initially found, require the `,` library and try again.
+```
+# MathFunctions/CMakeLists.txt
+include(CheckSymbolExists)
+check_symbol_exists(log "math.h" HAVE_LOG)
+check_symbol_exists(exp "math.h" HAVE_EXP)
+if(NOT (HAVE_LOG AND HAVE_EXP))
+  unset(HAVE_LOG CACHE)
+  unset(HAVE_EXP CACHE)
+  set(CMAKE_REQUIRED_LIBRARIES "m")
+  check_symbol_exists(log "math.h" HAVE_LOG)
+  check_symbol_exists(exp "math.h" HAVE_EXP)
+  if(HAVE_LOG AND HAVE_EXP)
+    target_link_libraries(MathFunctions PRIVATE m)
+  endif()
+endif()
+```
+If available, use `target_compile_definitions()` to specify `HAVE_LOG` and `HAVE_EXP` as `PRIVATE` compile definitions.
+
+```
+# MathFunctions/CMakeLists.txt
+if (HAVE_LOG AND HAVE_EXP)
+  target_compile_definitions(MathFunctions
+                             PRIVATE "HAVE_LOG" "HAVE_EXP")
+endif()
+```
+if `log` and `exp` are available on the system, then we will use them to compute the square root in the `mysqrt` function.
+```cpp
+# MathFunctions/mysqrt.cxx
+#if defined(HAVE_LOG) && defined(HAVE_EXP)
+  double result = exp(log(x) * 0.5);
+  std::cout << "Computing sqrt of " << x << " to be " << result << " using log and exp " << std::endl;
+#else
+  double result = x;
+```
+we will also need to modify `mysqrt.cxx` to include `cmath`.
+```
+#MathFucntions/mysqrt.cxx
+#include <cmath>
+```
+
 ## step 6: adding a custom command and generated file
+suppose, for the purpose of this tutorial, we decide that we never want to use the platform `log` and `exp` functions and instead would like to generate a table of precomputed values to use in the `mysqrt` function.
+In this section, we will create the table as part of the build process, and then compile that table into our aplication.
+1. let's remove the check for the `log` and `exp` functions in `MathFunctions/CMakeLists.txt`. 
+2. Then remove the check for `HAVE_LOG` and `HAVE_EXP` from `mysqrt.cxx`. 
+At the same time, we can remove `#include <cmath>`.
+3. In the `MathFunctions` subdirectory, a new source file named `MakeTable.cxx` has been provided to generate the table.
+
+after reviewing the file, we can see that the table is produced as valid C++ code and that the output filename is passed in as an argument.
+4. to add the appropriate commands to the `MathFunctions/CMakeLists.txt` file to build the MakeTable executable and then run it as part of the build process.
+A few commands are needed to accomplish this.
+   1. at the top of `MathFunctions/CMakeLists.txt`, the executable for `MakeTable` is added as any other executable would be added.
+   ```
+   # MathFunctions/CMakeLists.txt
+   add_executable(MakeTable MakeTable.cxx)
+   ```
+   2. we add a custom command that specifies how to produce `Table.h` by running MakeTable
+   ```
+   # MathFunctions/CMakeLists.txt
+   add_custom_command(
+      OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/Table.h
+      COMMAND MakeTable ${CMAKE_CURRENT_BINARY_DIR}/Table.h
+      DEPENDS MakeTable
+   )
+   ```
+   3. we have to let CMake know that `mysqrt.cxx` depends on generated file `Table.h`. This is done by adding the genreated `Table.h` to the list of sources for the library MathFunctions.
+
+   ```
+   #MathFunctions/CMakeLists.txt
+   add_library(MathFunctions
+               mysqrt.cxx
+               ${CMAKE_CURRENT_BINARY_DIR}/Table.h)
+   ```
+   4. we also have to add the current binary directory to the list of include directories so that `Table.h` can be found and included by `mysqrt.cxx`.
+   ```
+   #MathFunctions/CMakeLists.txt
+   target_include_directories(MathFunctions
+               INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}
+               PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
+               )
+   ```
+   5. let's use the generated table. First, modify `mysqrt.cxx` to include `Table.h`.
+   6. we can rewrite the `mysqrt` function to use the table.
+   ```cpp
+   double mysqrt(double x) {
+      if (x < = 0) {
+         return 0;
+      }
+
+      // use the table to help find an initial value
+      double result = x;
+      if (x >= 1 && x < 10) {
+         std::cout << "use the table to help find an initial value " << std::endl;
+         result = sqrtTable[static_cast<int>(x)];
+      }
+
+      // do ten iterations
+      for (int i = 0; i < 10; ++i) {
+         if (result <= 0) {
+            result = 0.1;
+         }
+         double delta = x - (result * result);
+         result = result + 0.5 * delta / result;
+         std::cout << "Computing sqrt of " << x << " to be " << result << std::endl;
+      }
+      return result;
+   }
+   ```
+
+when this project is built it will first build the `MakeTable` executable. It will then run `MakeTable` to produce `Table.h`.
+Finally, it will compile `mysqrt.cxx` which includes `Table.h` to produce the `MathFunctions` library.
 ## step 7: packaging an installer
+
 ## step 8: adding support for a testing dashboard
 ## step 9: selecting static or shared libraries
 ## step 10: adding generator expressions
