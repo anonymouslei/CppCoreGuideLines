@@ -1,14 +1,33 @@
 # Machine-level programming I: Basics
 
 - [Machine-level programming I: Basics](#machine-level-programming-i-basics)
-	- [Assembly Basics: registers, operands, move](#assembly-basics-registers-operands-move)
-		- [Definitions](#definitions)
-		- [Assembly/Machine Code View](#assemblymachine-code-view)
-	- [History of Intel processors and architectures](#history-of-intel-processors-and-architectures)
-	- [C, assembly, machine code](#c-assembly-machine-code)
-	- [Arithmetic & logical operations](#arithmetic--logical-operations)
+  - [History of Intel processors and architectures](#history-of-intel-processors-and-architectures)
+  - [Assembly Basics: registers, operands, move](#assembly-basics-registers-operands-move)
+    - [Definitions](#definitions)
+    - [Assembly/Machine Code View](#assemblymachine-code-view)
+    - [Assembly Characteristics: Data types](#assembly-characteristics-data-types)
+    - [assembly characteristics: operations](#assembly-characteristics-operations)
+    - [Moving Data](#moving-data)
+    - [movq Operand Combinations](#movq-operand-combinations)
+    - [simple memory addressing modes](#simple-memory-addressing-modes)
+    - [Complete Memory Addressing Modes](#complete-memory-addressing-modes)
+    - [address computation examples](#address-computation-examples)
+  - [Arithmetic & logical operations](#arithmetic--logical-operations)
+    - [Address computation instruction](#address-computation-instruction)
+    - [some arithmetic operations](#some-arithmetic-operations)
+    - [arithmetic expression example](#arithmetic-expression-example)
+  - [C, assembly, machine code](#c-assembly-machine-code)
+      - [Turning C into Object code](#turning-c-into-object-code)
+      - [object code](#object-code)
+      - [machine instruction example](#machine-instruction-example)
+      - [disassembling object code](#disassembling-object-code)
+    - [machine programming 1: summary](#machine-programming-1-summary)
+
+
+## History of Intel processors and architectures
 
 ## Assembly Basics: registers, operands, move
+
 ### Definitions
 - Architecture: (also ISA: instruction set architecture) the parts of a processor design that one needs to understand for writing assembly / machine code.
   - examples: instruction set specification, registers
@@ -33,9 +52,211 @@
     - code and user data
     - stack to support procedures
 
-## History of Intel processors and architectures
-## C, assembly, machine code
+### Assembly Characteristics: Data types
+- "Integer" data of 1,2,4, or 8 bytes
+  - data values
+  - addresses (untyped pointers)
+- Floating point data of 4, 8 or 10 bytes
+- (SIMD vector data types of 8,16,32 or 64 bytes) 
+- code: byte sequences encoding series of instructions
+- no aggregate types such as arrays or structures
+  - just contiguously allocated bytes in memory
+
+### assembly characteristics: operations
+- Transfer data between memory and register
+  - load data from memory into register
+  - store register data into memory
+- Perform arithmetic function on register or memory data
+- transfer control
+  - unconditional jumps to/from procedures
+  - conditional branches
+  - indirect branches
+
+### Moving Data
+- Moving Data
+  `movq source, Dest`
+- Operand Types
+  - immediate: constant integer data
+    - example: $0x400, $-533
+    - like C constant, but prefixed with `$`
+    - Encoded with 1, 2, or 4 bytes
+  - register: one of 16 integer registers
+    - example: %rax, %r13
+    - but %rsp reserved for special use
+    - others have special uses for particular instructions
+  - memory: 8 consecutive bytes of memory at address given by register
+    - simplest example: (%rax)
+    - various other "addressing modes"
+
+**warning**: intel docs use `mov Dest, source` 
+### movq Operand Combinations
+
+| source | dest | src, dest          | C Analog       |
+| ------ | ---- | ------------------ | -------------- |
+| Imm    | reg  | movq $0x4, %rax    | temp = 0x4;    |
+| Imm    | mem  | movq $-147, (%rax) | *p = -147      |
+| reg    | reg  | movq %rax, %rdx    | temp2 = temp1; |
+| reg    | mem  | movq %rax, (%rdx)  | *p = temp;     |
+| mem    | reg  | movq (%rax), %rdx  | temp = *p;     |
+
+**cannot do memory-memory transfer with a single instruction**
+
+### simple memory addressing modes
+- normal (R) Mem[Reg[R]]
+  - Register R specifies memory address
+  - Aha! Pointer dereferencing in C
+
+  `movq (%rcx), %rax`
+- Displacement D(R) Mem[Reg[R]+D]
+  - Register R specifies start of memory region
+  - Constant displacement D specifies offset
+
+  `movq 8 (%rbp), %rdx`
+
+### Complete Memory Addressing Modes
+- most general form
+  | D(Rb, Ri, S) | Mem[Reg[Rb]+S*Reg[Ri]+D] |
+  | ------------ | ------------------------ |
+
+  - D: constant "displacement" 1, 2, or 4 bytes
+  - Rb: Base register: any of 16 integer registers
+  - Ri: Index register: any, except for %rsp
+  - S: scale: 1, 2, 4, or 8 (why these numbers?)
+
+- special case
+  | (Rb, Ri)  | Mem[Reg[Rb]+Reg[Ri]]   |
+  | --------- | ---------------------- |
+  | D(Rb,Ri)  | Mem[Reg[Rb]+Reg[Ri]+D  |
+  | (Rb,Ri,S) | Mem[Reg[Rb]+S*Reg[Ri]] |
+
+### address computation examples
+
+| %rdx | 0xf000 |
+| ---- | ------ |
+| %rcx | 0x0100 |
+
+| expression    | address computation | address |
+| ------------- | ------------------- | ------- |
+| 0x8(%rdx)     | 0xf000+0x8          | 0xf008  |
+| (%rdx,%rcx)   | 0xf000+0x100        | 0xf100  |
+| (%rdx,%rcx,4) | 0xf000+4*0x100      | 0xf400  |
+| 0x80(,%rdx,2) | 2*0xf000+0x80       | 0x1e080 |
+
 ## Arithmetic & logical operations
+### Address computation instruction
+- leaq Src, Dst
+  - Src is address mode expression
+  - Set Dst to address denoted by expression
+- Uses
+  - computing addresses without a memory reference
+  - computing arithmetic expressions of the form x + k*y
+    - k = 1,2,4, or 8
+
+### some arithmetic operations
+- two operand instructions
+  | format                                     | computation |                    |
+  | ------------------------------------------ | ----------- | ------------------ |
+  | addq                                       | Src, Dest   | Dest = Dest + Src  |
+  | subq                                       | Src, Dest   | Dest = Dest - Src  |
+  | imulq                                      | Src, Dest   | Dest = Dest * Src  |
+  | salq (also called shlq arithmetic logical) | Src, Dest   | Dest = Dest << Src |
+  | sarq                                       | Src, Dest   | Dest + Dest >> src |
+  | shrq                                       | Src, Dest   | Dest = Dest >> Src |
+  | xorq                                       | Src, Dest   | Dest = Dest ^ Src  |
+  | andq                                       | Src, Dest   | Dest=Dest&Src      |
+  | orq                                        | Src, Dest   | Dest = Dest        | Src |
+- watch out for argument order!
+- No distinction between signed and unsigned int (Why?)
+- one operand instructions
+  | format | computation |                 |
+  | ------ | ----------- | --------------- |
+  | incq   | Dest        | Dest = Dest + 1 |
+  | decq   | Dest        | Dest = Dest -1  |
+  | negq   | Dest        | Dest = -Dest    |
+  | notq   | Dest        | Dest =~Dest     |
+- see book for more instructions
+### arithmetic expression example
+- Interesting instructions
+  - leaq: address computation
+  - salq: shift
+  - imulq: multiplication
+TODO:新版S43页看不懂
+
+
+
+## C, assembly, machine code
+#### Turning C into Object code
+- code in files p1.c p2.c
+- compile with command: `gcc -Og p1.c p2.c -o p`
+  - use basic optimizations (`-Og`)[New to recent versions of GCC]
+  - put resulting binary in file p
+1. C program (p1.c p2.c) (test)
+   1. compiler (`gcc -Og -S`)  
+   2. obtain with command `gcc -Og -S sum.c`
+   3. produces file sum.s
+2. Asm program (p1.s p2.s) (test)
+   1. Assembler (`gcc -c or as`)
+3. Object program (p1.o p2.0) (binary)
+   1. Linker (gcc or 1d)
+4. Executable program (p) (binary) and Static libraries (.a)
+
+- things that look weird and are preceded by a '.' are generally directives.
+
+#### object code
+- Assembler 
+  - translates .s into .o
+  - binary encoding of each instruction
+  - nearly-complete image of executable code 
+  - missing linkages between code in different files
+- linker 
+  - resolves references between files
+  - combines with static run-time libraries
+    - e.g., code for `malloc, printf`
+  - some libraries are dynamically linked
+    - linking occurs when program begins execution
+
+#### machine instruction example
+- C code
+  `*dest = t`
+  - store value t where designated by `dest`
+- Assembly 
+  `movq %rax, (%rbx)`
+  - move 8-byte value to memory
+    - quad words in x86-64 parlance
+  - operands
+    - t: register Register `%rax`
+    - dest: register `%rbx`
+    - *dest: Memory `M[%rbx]`
+- object code `0x40059e: 48 89 03`
+  - 3-byte instruction
+  - stored at address 0x40059e
+
+#### disassembling object code
+- disassembler
+  - `objdump -d sum`
+  - useful tool for examining object code
+  - analyzes bit pattern of series of instructions
+  - produces approximate rendition of assembly code
+  - can be run on either a.out (complete executable) or .o file
+- alternate dissembly
+  - within gdb debugger
+  ```
+  gdb sum
+  disassemble sumstore
+  ```
+- anything that can be interpreted as executable code
+- disassembler examines bytes and reconstructs assembly source
+
+### machine programming 1: summary
+- history of intel processors and architectures
+  - evolutionary design leads to many quirks and artifacts
+- C, assembly, machine code
+  - new forms of visible state: program counter, registers,...
+  - compiler must transform statements, expressions, procedures into low-level instruction sequences
+- assembly basics: registers, operands, move
+  - the x86-64 move instructions cover wide range of data movement forms
+- arithmetic
+  - C compiler will figure out different instruction combinations to carry out computation
 
 S14: cache: if you re-access that memory it will go faster. 
 But it is not visible in terms of there is no instructions to manipulate the cache.
