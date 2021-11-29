@@ -43,7 +43,6 @@ The linker(ld) handles this merging.
 The result is the `hello` file, which is an executable object file that is ready to be loaded into memory and executed by the system.
 
 ## 1.3 it pays to understand how compilation system work
-
 ## 1.4 Processors Read and Interpret Instructions Stored in Memory
 The register file is a small storage device that consists of a collection of word-size registers, 
 each with its own unique name.
