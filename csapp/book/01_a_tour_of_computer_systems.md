@@ -43,3 +43,24 @@ The linker(ld) handles this merging.
 The result is the `hello` file, which is an executable object file that is ready to be loaded into memory and executed by the system.
 
 ## 1.3 it pays to understand how compilation system work
+
+## 1.4 Processors Read and Interpret Instructions Stored in Memory
+The register file is a small storage device that consists of a collection of word-size registers, 
+each with its own unique name.
+The ALU computes new data and address values.
+- load: copy a byte or a word from main memory into a register, overwriting the previous contents of the register
+- Store: copy a byte of a word from a register to a location in main memory, overwriting the previous contents of that location
+- Operate: copy the contents of tow registers to the ALU, perform an arithmetic operation on the two words, and store the result in a register, overwriting the previous contents of that register.
+- Jump: extract a word from the instruction itself and copy that word into the program counter, overwriting the previous value of the PC
+  
+## 1.5 Caches Matters
+## 1.6 Storage Devices Form a Hierarchy
+## 1.7 The operating system manages the Hardware
+we can think of the operating system as a layer of software interposed between the application program and the hardware.
+All attempts by an application program to manipulate the hardware must go through the operating system.
+
+The operating system has two primary purpose:
+    1. to protect the hardware from misuse by runaway applications
+    2. to provide applications with simple und uniform mechanisms for manipulating complicated and often wildly different low-level hardware devices.
+
+### 1.7.1 processes
