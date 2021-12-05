@@ -191,7 +191,7 @@ int allOddBits(int x) {
  *   Rating: 2
  */
 int negate(int x) {
-  return 2;
+  return ~x+1;
 }
 //3
 /* 
@@ -204,7 +204,8 @@ int negate(int x) {
  *   Rating: 3
  */
 int isAsciiDigit(int x) {
-  return 2;
+  //先判断5-8位是否为0011,再判断1-4位是不是在0000-1001之间。通过加6之后是否进位来判断
+  return !((x>>4)^0x3)&(!(((x&0xF)+6)>>4));
 }
 /* 
  * conditional - same as x ? y : z 
