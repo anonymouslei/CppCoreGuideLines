@@ -64,3 +64,34 @@ The operating system has two primary purpose:
     2. to provide applications with simple und uniform mechanisms for manipulating complicated and often wildly different low-level hardware devices.
 
 ### 1.7.1 processes
+when a program such as hello runs on a modern system, the operating system provides the illusion that the program is only one running on the system.
+The program appears to have exclusive use of both the processor, main memory, and I/O devices.
+The processor appears to execute the instructions in the program, one after other, without interruption.
+By concurrently, we mean that the instructions of one process are interleaved with the instructions of another process.
+
+The transition from one process to another is managed by the operating system kernel.
+The kernel is the portion of the operating system code that is always resident in memory.
+When an application program requires some action by the operating system, such as to read or write a file, 
+it executes a special system call instruction,
+transferring control to the kernel.
+The kernel then performs the requested operation and returns back to the application program.
+Note that the kernel is not separate process. Instead, it is a collection of code and data structures that the system uses to manage all the progresses.
+
+### 1.7,2
+### 1.7.3 Virtual memory
+Virtual memory is an abstraction that provides each process with the illysion that it has exclusive use of the main memory.
+Each process has the same uniform view of memory, which is known as its virtual address space.
+
+In Linux, the topmost region of the address space is reserved for code data in the operating system that is common to all processes.
+
+The lower region of the address space holds the code and data defined by the user's process.
+The virtual address space seen by each process consists of a number of well-defined areas, each with a specific purpose.
+- Program code and data. Code begins at the same fixed address for all processes, followed by data locations that correspond to global C variables. 
+  The code and data areas are initialized directly from the contents of an executable object file.
+- heap: The code and data areas are followed immediately by the run-time heap. The heap expands and contracts dynamically at run time as a result of calls to C standard library routines such as malloc and free.
+- shared libraries. Near the middle of the address space is an area that holds the code and data form shared libraries such as the C standard library and the math library. 
+- stack. at the top of the user's virtual address space is the user stack that the compiler uses to implement function calls.Like the heap, the user stack expands and contracts dynamically during the execution of the program.
+  In particular, each time we call a function, the stack grows. each time we return from a function, it contracts.
+- kernel virtual memory. The top region of the address space is reserved for the kernel.
+  Application programs are not allowed to read or write the contents of this area or to directly call functions defined in the kernel code. Instead, they must invoke the kernel to perform these operations.
+
