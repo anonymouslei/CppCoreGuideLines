@@ -95,3 +95,34 @@ The virtual address space seen by each process consists of a number of well-defi
 - kernel virtual memory. The top region of the address space is reserved for the kernel.
   Application programs are not allowed to read or write the contents of this area or to directly call functions defined in the kernel code. Instead, they must invoke the kernel to perform these operations.
 
+### 1.7.4 files
+every I/O device, including disks, keyboards,displays and even networks,
+is modeled as a file.
+All input and output in the system is performed by reading and writing files, using a small set of system calls known as Unix I/O.
+It provieds applications with a uniform view of all the varied I/O devices.
+
+## 1.8 Systems communicate with other systems using networks
+When the system copies a sequence of bytes from main memory to the network adapter,
+the data flow across the network to another machine, 
+instead of, say, to a local disk drive.
+
+suppose we use a talnet client running on our local machine to connect to a talnet server on a remote machine.
+After we log in to the remote machine and run a shell,
+the remote shell is waiting to receive an input command.
+
+## 1.9 inportant themes
+### 1.9.1 Amdahl's law
+when we speed up one part of a system, the effect on the overall system performance depends on both how significant this part was and how much it sped up.
+Consider a system in which executing some application requires time T_old.
+Suppose some part of the system requires a fraction alpha of this time, and that we improve its performance by a factor of k.
+This is the major insight of Amdahl's law -- to significantly speed up the entire system, we must improve the speed of a very large fraction of the overall system.
+### 1.9,2 Concurrency and Parallelism
+Concurrency to refer to the general concept of a system with multiple, simultaneous activities,
+and parallelism to refer to the use of concurrency to make a system run faster.
+
+- Thread-level concurrency
+  building on the process abstraction, we are able to devise systems where multiple programs execute at the same time, leading to concurrency.
+  With threads, we can even have multiple control flows executing within a single process.
+  It involves having multiple copies of some of the CPU hardware, such as program counters and register files, while having only single copies of other parts of the hardware,
+  such as the units that perform floating-point arithmetic
+.
