@@ -120,9 +120,41 @@ This is the major insight of Amdahl's law -- to significantly speed up the entir
 Concurrency to refer to the general concept of a system with multiple, simultaneous activities,
 and parallelism to refer to the use of concurrency to make a system run faster.
 
-- Thread-level concurrency
+#### Thread-level concurrency
   building on the process abstraction, we are able to devise systems where multiple programs execute at the same time, leading to concurrency.
   With threads, we can even have multiple control flows executing within a single process.
   It involves having multiple copies of some of the CPU hardware, such as program counters and register files, while having only single copies of other parts of the hardware,
   such as the units that perform floating-point arithmetic
 .
+
+The use of multiprocessing can improve system performance in two ways.
+- it reduces the need to simulate concurrency when performing multiple tasks.
+  As mentioned, even a personal computer being used by a single person is expected to perform many activities concurrently
+- it can run a single application program faster, but only if that program is expressed in terms of multiple threads that can effectively execute in parallel.
+  
+
+#### Instruction-level Parallelism
+More recent processors can sustain execution rates of 2-4 instructions per clock cycle.
+Any given instruction requires much longer from start to finish, perhaps 20 cycles or more,
+but the processor uses a number of clever tricks to process as many as 100 instructions at a time.
+Pipelining:
+the actions required to execute an instruction are partitioned into different steps and the processor hardware is organized as a series of stages,
+each performing one of these steps.
+The stages can operate in parallel, working on different parts of different instructions.
+we will see that a fairly simple hardware design can sustain an execution rate close to 1 instruction per clock cycle.
+
+#### single-instruction, multiple-data (SIMD) parallelism (lowest level)
+many modern processors have special hardware that allows a single instruction to cause multiple operations to be performed in parallel.
+
+### 1.9.3 The importance of Abstractions in Computer systems
+One aspect of good programming practice is to formulate a simple application program interface for a set of functions that alow programmers to use the code without having to delve into its inner workings.
+On the processor side, the instruction set architecture provides an abstraction of the actual processor hardware.
+with this abstraction, a machine-code program behaves as if it were executed on a processor that performs just one instruction at a time.
+The underlying hardwware is far more elaborate, executing multiple instructions in parallel, but always in a way that is consistent with the simple, sequential model.
+By keeping the same execution model, different processor implementations can execute the same machine code while offering a range of cose and performance.
+
+## Part 1: Program Structure and Execution
+## Chapter 2: Representing and Manipulating information
+## 2.1 Information Storage
+Modern computers store and process information represented as two-valued signals.
+these lowly binary digits, or bits, form the basic of the digital revolution.
