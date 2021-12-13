@@ -155,6 +155,13 @@ By keeping the same execution model, different processor implementations can exe
 
 ## Part 1: Program Structure and Execution
 ## Chapter 2: Representing and Manipulating information
-## 2.1 Information Storage
 Modern computers store and process information represented as two-valued signals.
 these lowly binary digits, or bits, form the basic of the digital revolution.
+
+- unsigned: encodings are based on traditional binary notation, representing numbers greater than or equal to 0.
+- two's-complement: encodings are the most commonm way to represent signed integers, that is, numbers that may be either positive or negative.
+- Folating-point: encodings are a base-2 version of scientific notation for representing real numbers.
+  
+## 2.1 Information Storage
+Rather than accessing individual bits in memory, most computers use blocks of 8 bits, or bytes, as the smallest addressable unit of memory.
+A machine-level program views memory as a very large array of bytes, referred to as virtual memory.
