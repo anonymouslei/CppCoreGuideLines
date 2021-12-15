@@ -165,3 +165,6 @@ these lowly binary digits, or bits, form the basic of the digital revolution.
 ## 2.1 Information Storage
 Rather than accessing individual bits in memory, most computers use blocks of 8 bits, or bytes, as the smallest addressable unit of memory.
 A machine-level program views memory as a very large array of bytes, referred to as virtual memory.
+Every byte of memory is identified by a unique number, known as its address, and the set of all possible addresses is known as the virtual address space.
+
+### 2.1.1 Hexadecimal Notation
