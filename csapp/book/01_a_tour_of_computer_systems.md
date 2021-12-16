@@ -168,3 +168,37 @@ A machine-level program views memory as a very large array of bytes, referred to
 Every byte of memory is identified by a unique number, known as its address, and the set of all possible addresses is known as the virtual address space.
 
 ### 2.1.1 Hexadecimal Notation
+### 2.1.2 Data Sizes
+since a virtual address is encoded by such a word, the most important system parameter determined by the word size is the maximum size of the virtual address space.
+
+That is, for a machine with a w-bit word size, the virtual addresses can range from 0 to 2w -1, giving the program access to at most 2w bytes.
+
+### 2.1.3 Addressing and byte ordering
+what the address of the object will be, and how we will order the bytes in memory.
+In virtually all machines, a multi-byte object is stored as a contiguous sequence of bytes, with the address of the object given by the smallest address of the bytes used.
+
+```C
+#include <stdio.h>
+
+typedef unsigned char* byte_pointer;
+
+void show_bytes(byte_pointer start, size_t len) {
+    int i;
+    for (i = 0; i< len; i++)
+        printf(" %.2x", start[i]);
+    printf("\n");
+}
+
+void show_int(int x) {
+    show_bytes((byte_pointer) &x, sizeof(int));
+}
+
+void show_float(float x) {
+    show_bytes((byte_pointer) &x, sizeof(float));
+}
+
+void show_pointer(void* x) {
+    show_bytes((byte_pointer) &x, sizeof(float));
+}
+```
+
