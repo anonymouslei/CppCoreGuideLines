@@ -202,3 +202,47 @@ void show_pointer(void* x) {
 }
 ```
 
+The typedef declaration in C provides a way of giving a name to a data type.
+This can be a greate help in improving readability.
+
+### 2.1.4 Representing Strings
+A string in C is encoded by an array of characters terminated by teh null character.
+
+### 2.1.5 Representing Code
+a program, from the perspective of the machine, is simply a sequence of bytes.
+### 2.1.6 introduction to boolean algebra
+since binary values are at the core of how computers encode, store, and
+manipulate information, a rich body of mathematical knowledge has evolved
+around the valuse 0 and 1.
+he showed that Boolean algebra could be applied to the design and analysis
+of networks of electromechanical relays.
+Although computer technology has advanced considerably since, boolean algebra
+still plays a central role in teh design and analysis of digital systems.
+
+the mask represents the set of enabled signals.
+
+###2.1.7 bit-level operations in c
+one useful feature of C is that it supports bitwise boolean operations.
+as our examples show, the best way to determine the effect of a bit-level
+experssion is to expand the hexadecimal arguments to their binary representations,
+perform the operations in binary, and then convert back to hexadecimal.
+
+```c
+void inplace_swap(int* x, int *y) {
+    *y = *x ^ *y;
+    *x = *x ^ *y;
+    *y = *x ^ *y;
+}
+```
+as the name implies, we claim that the effect of this procedure is to swap
+teh values  stored at the location denoted by pointer variables x and y.
+`c
+void reverse_array(int a[], int cnt)
+{
+    int first, last;
+    for (first = 0, last = cnt-1;
+    first <= last;
+    first++, last--)
+        inplace_swap(&a[first], &a[last]);
+}
+```
