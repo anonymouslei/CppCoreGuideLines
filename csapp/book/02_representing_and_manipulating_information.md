@@ -150,3 +150,105 @@ this means that it can represent one less positive number than negative.
 we see, then, that function T2U describes the conversion of a two's complement number to its unsigned counterpart, while U2T converts in the opposite direction.
 P108
 
+when mapping a signed number to its unsigned counterpart, negative numbers are converted to large positive numbers, while nonnegative numbers remain unchanged.
+
+To summarize, we considered the effects of converting in both directions between unsigned and two's-complement representations.
+numbers in this range have identical unsigned and two's -complement representations.
+for values outside of this range, the conversions either add or subtract 2w. 
+
+### 2.2.5 signed versus unsigned in C
+When an operation is performed where one operand is signed and the other is unsigned, C implicitly casts the signed argument to unsigned and performs the operations assuming the numbers are nonnegative.
+As we will see, this convention makes little difference for standard arithmetic operations, 
+but it leads to nonintuitive results for relational operators such as < and >.
+
+### 2.2.6 Expanding the Bit Representation of a Number
+#### web aside Data: TMIN
+one point worth making is that the relative order of conversion from one data size to another and between unsigned and signed can affect the behavior of a program.
+this shows that, when converting from short to unsigned, the program first changes the size and then the type.
+
+Function fun1 extracts a value from the low-order 8 bits of the argument, giving an integer ranging between 0 and 255. Function fun2 extracts a value from the low-order. Function fun2 extracts a value from the low-order 8 bits of the argument, but it also performs sign extension. the result will be a number between -128 and 127.
+
+### 2.2.7 Truncating numbers
+this intuition behind this principle is simply that all of the bits that were truncated have weights of the form 2i.
+
+the effect of this truncation on unsigned values is to simply find their residue, modulo 8. The effect of the truncation on signed values is a bit more complex.
+we first compute the modulo 8 residue of the argument.
+this will give values 0 through 7 for arguments 0 through 7,
+and also for arguments -8 through -1.
+
+### 2.2.8 Advice on signed versus unsigned
+the implicit casting of signed to unsigned leads to some non-intuitive behavior. 
+Nonintuitive features often lead to program bugs, and ones involving the nuances of implicit casting can be especially difficult to see.
+
+this problem is designed to demonstrate how easily bugs can arise due to the implicit casting from signed to unsigned.
+It seems quite natural to pass parameter length as an unsigned, 
+since one would never want to use a negative length.
+The stopping criterion i<= length-1 also seems quite natural.
+but combining these two yields an unexpected outcome!
+
+Since parameter length is unsigned, the computation 0-1 is performed using unsigned arithmetic, which is equivalent to modular addition.
+
+we have seen multiple ways in which the subtle features of unsigned arithmetic, and especially the implicit conversion of signed to unsigned, can lead to errors
+or vulnerabilities.
+
+## 2.3 Integer arithmetic
+### 2.3.1 Unsigned addition
+#### Aside Security vulnerability in getpeername
+it is designed to copy some of the data maintained by the operating system kernel to a designated region of memory accessible to the user.
+Most of the data structures maintained by the kernel should not be readable by a user,
+since they may contain sensitive information about other users and about other jobs running on the system.
+but the region shown as kbuf was intended to be one that the user could read.
+suppose, however, that some malicious programmer writes code that calls copy_from_kernel with a negative value of maxlen.
+
+Modular addition forms a mathematical structure known as an abelian group.
+It is commutative and associative;
+it has an identity element 0, and every element has an additive inverse.
+
+### 2.3.2 Two's-complement addition 
+this function should return 1 if arguments x and y can be added without causing overflow.
+```c
+int tadd_ok(int x, int y) {
+    int sum = x + y;
+    int neg_over = x < 0 && y < 0 && sum >=0;
+    int pos_over = x >= 0 && y >= 0 && sum < 0;
+    return !neg_over && !pos_over;
+}
+```
+
+```c
+// determine whether arguments can be subtracted without overflow
+int tsub_ok(int x, int y) {
+    return tadd_ok(x, -y); // except y is TMin
+}
+```
+One lesson to be learned from this exercise is that TMin should be included as one of the cases in any test procedure for a function.
+
+### 2.3.3 Two's Complement Negation
+for w = 4, we have TMin4=-8. So -8 is its own additive inverse,
+while other values are negated by integer negation.
+
+#### bit-level representation of two's complement negation
+there are several clever ways to determine the two's-complement negation of a value represented at the bit level.
+
+One technique for performing two's-complement negation at the bit level is to complement the bits and then increment the result.
+
+a second way:
+splitting the bit vector into two parts.
+
+### 2.3.4 Unsigned multiplication
+### 2.3.5 two's complement multiplication
+Although the bit-level representations of the full products may differ, those of the truncated products are identical.
+
+you are given the assignment to develop code for a function `tmult_ok` that will determine whether two arguments can be multiplied without causing overflow.
+
+
+1. we know that x*y can be written as a 2w-bit two's-complement number. 
+
+### 2.3.6 Multiplying by constants
+Historically, the integer multiply instruction on many machines was fairly slow, requiring 10 or more clock sycles, whereas other integer operations - such as addition, subtraction, bit-level operations, and shifting--required only 1 clock cycle.
+
+In Chapter 3, we will see many examples of the LEA instruction in action.
+the instruction is provided to support pointer arithmetic, but the C compiler often uses it as a way to perform multiplication by small constants.
+for each value of k, we can compute two multiples:
+2k and 2k+1.
+Thus, we can compute multiples 1,2,3,4,5,6,and 9.
