@@ -66,7 +66,7 @@ still plays a central role in teh design and analysis of digital systems.
 
 the mask represents the set of enabled signals.
 
-###2.1.7 bit-level operations in c
+### 2.1.7 bit-level operations in c
 one useful feature of C is that it supports bitwise boolean operations.
 as our examples show, the best way to determine the effect of a bit-level
 experssion is to expand the hexadecimal arguments to their binary representations,
@@ -252,3 +252,29 @@ the instruction is provided to support pointer arithmetic, but the C compiler of
 for each value of k, we can compute two multiples:
 2k and 2k+1.
 Thus, we can compute multiples 1,2,3,4,5,6,and 9.
+
+we can view the bit pattern [11011] as having a run of 6 ones with a zero in the middle, and so we apply the rule for form B, but then we subtract the term corresponding to the middle zero bit.
+
+How should the compiler decide which form to use?
+Assuming that addition and subtraction have the same performance, the rule is to choose form A when n=m, either form when n = m + 1, and form B when n > m+1.
+the justification for this rule is as follows.
+when n = m, form A requires only a single shift, 
+
+### 2.3.7 dividing by powers of 2
+integer division on most machine is even slower than integer multiplication--requiring 30 or more clock cycles.
+diving by a power of 2 can also be performed using shift operations, but we use a right shift rather than a left shift. 
+the two different right shifts-logical and arithmetic-serve this purpose for unsigned and two's-complement numbers, respectively.
+interger division always rounds toward zero. 
+to define this precisely,
+let us introduce some notation.
+
+the case for using shifts with unsigned arithmetic is straightforward, in part because right shifting is guaranteed to be performed logically for unsigned valuse.
+
+#### principle unsigned division by a power of 2
+for C variables x and k with unsigned values x and k, such that 0<=k < w, the C expression x >> k yields the value x/2k.
+as examples, figure 2.28 shows the effects of performing logical right shifts on a 16-bit representation of 12340 to perform division by 1,2,16,256. 
+
+#### derivation
+the examples illustrate that arithmetic right shift is similar to division by a power of 2, except that it rounds down rather than toward zer.
+
+the case for dividing by 
