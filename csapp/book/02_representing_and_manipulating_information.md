@@ -277,4 +277,99 @@ as examples, figure 2.28 shows the effects of performing logical right shifts on
 #### derivation
 the examples illustrate that arithmetic right shift is similar to division by a power of 2, except that it rounds down rather than toward zer.
 
-the case for dividing by 
+the case for dividing by a power of 2 with two's-complement arithmetic is slightly more complex. First, the shifting should be performed using an arithmetic right shift, to ensure that negative values remain negative.
+#### principle: two's-complement division by a power of 2, rounding down
+Let C variables x and k have two's-complement value x and unsigned value k, respectively, such that 0 <= k < w. 
+the C expression x >> k, when the shift is performed arithmetically, yields the value [x/2k]
+
+for x >= 0, variable x has 0 as the most significant bit, and so the effect of an arithmetic shift is the same as for a logical right shift.
+thus, an arithmetic right shift by k is the same as division by 2k for a nonnegative number.
+as an example of a negative number, Figure 2.29 shows the effect of applying arithmetic right shift to a 16-bit representation of -12,340for different shift amounts.
+for the case when no rounding is required (k=1), the result will be x/2k. 
+when rounding is required, shifting causes the result to be rounded downward.
+for example, the shifting right by four has the effect of rounding -771.25 down to -772. we will need to adjust our strategy to handle division for negative values of x.
+
+#### derivation: two's complement division by a power of 2, rounding down
+we can correct for the improper rounding that occurs when a negative number is shifted right by "biasing" the value before shifting.
+
+#### principe: two's-complement division by a power of 2, rounding up
+Figure 2.30 demonstrates how adding the appropriate bias before performing the arithmetic right shift causes the result to be correctly rounded.
+we can see that the bits to the left of these may or may not be incremented.
+For the case where no rounding is required, adding the bias only affects bits that are shifted off.
+for the cases where rounding is required, adding the bias causes the upper bits to be incremented, so that the result will be rounded toward zero.
+
+write a function `div16` that returns the value x/16 for integer argument x.
+your function should not use division, modulus, multiplication, any conditionals (if or ?:),
+any LOOPS.
+```c
+int div16(int x) {
+    /* compute bias to be either 0 (x >= 0) or 15 (x < 0>) */
+    int bias = (x >> 31) & 0xF;
+    return (x + bias) >> 4;
+}
+```
+the only challenge here is to compute the bias without any testing or conditional operations.
+we use the trick that the expression x >> 31 generates a word with all ones if x is negative,
+and all zeros otherwise. 
+by masking off the appropriate bits, we get the desired bias value.
+
+we now see that division by a power of 2 can be implemented using logical or arithmetic right shifts.
+this is precisely the reason the two types of right shifts are available on most machines.
+Unfortunately, this approach does not generalize to division by arbitrary constants.
+unlike multiplication, we cannot express division by arbitrary constants K in terms of division by powers of 2.
+
+### 2.3.8 Final thoughts on integer arithmetic
+the "integer" arithmetic performed by computers is really a form of modular arithmetic. 
+the finite word size used to represent numbers limits the range of possible values, and the resulting operations can overflow.
+we can also seen that the two's-complement representation provides a clever way to represent both negative and positive values, while using the same bit-level implementations as are used to perform unsigned arithmetic - operations such as addition, subtraction, multiplication, and even division have either identical or very similar bit-level behaviors, whether the operands are in unsigned or two's-complement form.
+
+<!-- PP 2.44 not finished -->
+
+## 2.4 floating point
+a floating-point representation encodes rational numbers of the form V = x * 2y.
+
+### 2.4.1 fractional binary numbers
+### 2.4.2 IEEE floating-point representation
+V = (-1)^s * M * 2^E
+- the sign s determines whether the number is negative or positive, where the interpretation of teh sign bit for numeric value 0 is handled as a special case.
+- the significand M is a fractional binary number that ranges either between 1 and 2-e or between 0 and 1-e
+- the exponent E weights the value by a power of 2.
+
+the bit representation of a floating-point number is divided into three fields to encode these values:
+- the single sign bit s directly encodes the sign s.
+- the k-bit exponent field exp = ek-1 ...encodes the exponent E
+- the n-bit fraction field frac = encodes the significand M, but the value encoded also depends on whether or not the exponent field equals 0.
+
+#### case 1: normalized values
+this is the most common case. it occurs when the bit pattern of exp is neither all zeros(numeric value 0) nor all ones(numeric value 255 for single precision, 2047 for double).
+in this case,
+the exponent field is interpreted as representing a signed integer in biased form.
+the exponent value is E=e-bias, where e is the unsigned number having bit representation ek-1 ... e1e0 and bias is a bias value equal to 2k-1 - 1.
+
+why set the bias this way for denormalized values?
+having the exponent value be 1-Bias rather that simply -Bias might seem counterintuitive.
+we will see shortly that it provides for smooth transition from denormalized to normalized values.
+
+the fraction field frac is interpreted as representing the fractional value f, where 0<=f <1,
+with the binary point to the left of the most significant bit.
+the significand is defined to be `M = 1+f`.
+this is sometimes called an implied leading 1 representation, because we can view M to be the number with binary representation 1.
+this representation is a trick for getting an additional bit of precision for free, since we can always adjust the exponent E so that significand M is in the range 1 <=M < 2
+
+#### case 2: denormalized values
+when the exponent field is all zeros, the represented number is in denormalized form.
+in this case, the exponent value is E=1-bias, and the significand value is M = f, the value of the fraction field without an implied leading 1.
+Denormalized numbers serve two purposes. 
+- First, they provide a way represent numberic value 0,
+    since with a normalized number we must always have M >=1, and hence we cannot represent 0.
+    In fact, the floating-point representation of +0.0 has a bit pattern of all zeros: 
+    the sign bit is 0. the exponent field is all zeros, and the fraction field is all zeros, giving M =f - 0.
+    curiously, when the sign bit is 1, but the other fields are all zeros, we get the value -0.0.
+- a second function of denormalized numbers is to represent numbers that are very close to 0.0. they provide a property known as gradual underflow in which possible numeric value are spaced evenly near 0.0.
+
+#### case 3: special values
+when exponent field is all ones.
+when the fraction field is all zeros, the resulting values represent infinity, either +oo when
+infinity can represent results that overflow, as when we multiply two very large numbers, or when we divide by zero.
+when the fraction field is nonzero, the resulting value is called a NaN, short for "not a number".
+such 
