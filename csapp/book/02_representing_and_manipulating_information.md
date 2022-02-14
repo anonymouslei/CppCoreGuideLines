@@ -373,3 +373,45 @@ when the fraction field is all zeros, the resulting values represent infinity, e
 infinity can represent results that overflow, as when we multiply two very large numbers, or when we divide by zero.
 when the fraction field is nonzero, the resulting value is called a NaN, short for "not a number".
 such 
+
+### 2.4.3 Example Numbers
+the two zeros are special cases of denormalized numbers. Observe that the representable numbers are not uniformly distributed - they are denser nearer the origin.
+
+One interesting property of this representation is that if we interpret the bit representations of the values in Figure 2.35 as unsigned integers, they occur in ascending order, 
+as do the values they represent as floating-point numbers. 
+this is no accident - the IEEE format was designed so that floating-point numbers could be sorted using an integer sorting routine.
+A minor difficulty occurs when dealing with negative numbers, since they have a leading 1 and occur in descending order,
+but this can be overcome without requiring floating-point operations to perform comparisons.
+
+PP 2.47
+Figure 2.36 shows the representations and numeric values of some important single- and double-precision floating-point numbers.
+as with the 8-bit format shown in Figure 2.35, we can see some general properties for a floating-point representation with a k-bit exponent and an n-bit fraction
+we can see some general properties for a floating-point representation with a k-bit exponent and an n-bit fraction:
+- the value +0.0 always has a bit representation of all zeros.
+- the smallest positive denormalized value has a bit representation consisting of a 1 in the least significant bit position and otherwise all zeros.
+  it has a fraction value M = f = 2-n and an exponent value E = -2(k-1) + 2.
+  the numeric value is therefore V = 2(-n-2(k-1)+2)
+- the largest denormalized value has a bit representation consisting of an exponent field of all zeros and a fraction field of all ones.
+
+convert sample integer values into floating-point form.
+1. we create a normalized representation of this by shifting 13 positions to the right of a binary point.
+2. to encode this in IEEE single-precision format, we construct th efraction field by dropping hte leading 1 and adding 10 zeros to the end
+3. to construct the exponent field, we add bias 127 to 13, giving 140, which has binary representation.
+4. we combine this with a sign bit of 0 to get the floating-point.
+
+### 2.4.4 Rounding
+Floating-point arithmetic can only approximate real arithmetic, since the representation has limited range and precision.
+thus, for a value x, we generally want a systematic method of finding the "closet" matching value x' that can be represented in the desired floating-point format.
+One key problem is to define the direction to round a value that is halfway between two possibilities. 
+
+- round-to-event(also called round-to-nearest)
+  is the default mode. it attempts to find a closest match.
+  the only design decision is to determine the effect of rounding values that are halfway between two possible results.
+- round-toward-zero mode rounds positive numbers downward and negative numbers upward
+- round-down mode rounds both positive and negative numbers downward.
+- round-up mode rounds both positive and negative numbers upward
+
+why is there any reason to prefer even numbers?
+the problem with such a convention is that one can easily imagine scenarios in which rounding a set of data values would then introduce a statistical bias into the computation of an average of the values.
+
+round-to-even rounding can be applied even when we are not rounding to a whole number.
