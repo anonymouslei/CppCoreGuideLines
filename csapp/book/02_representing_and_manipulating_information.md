@@ -415,3 +415,46 @@ why is there any reason to prefer even numbers?
 the problem with such a convention is that one can easily imagine scenarios in which rounding a set of data values would then introduce a statistical bias into the computation of an average of the values.
 
 round-to-even rounding can be applied even when we are not rounding to a whole number.
+
+similarly, round-to-even rounding can be applied to binary fractional numbers.
+we consider least significant bit value 0 to be even and 1 to be odd.
+In general, the rounding mode is only significant when we have a bit pattern of the 
+
+As examples, consider the problem of rounding values to the nearest quarter
+...
+
+### 2.4.5 Floating-point operations 
+in practice, there are clever tricks floating-point unit designers use to avoid performing this exact computation, since the computation need only be sufficiently precise to guarantee a correctly rounded result.
+
+The lack of associativity in floating-point addition is the most important group property that is lacking.
+
+this lack of associativity and distributibity is of serious concern to scientific programmers and to compiler writers.
+
+### 2.4.6 Floating Point in C
+P2.53
+In general, it is better to use a library macro rather than iventing your own code.
+this code seems to work on a variety of machines, however.
+```C
+#define POS_INFINITY 1e400
+#define NEG_INFINITY (-POS_INFINITY)
+#define NEG_ZERO (-1.0/POS_INFINITY)
+```
+
+when casting values between int, float and double formats, the program changes the numeric values and the bit representations as follows
+- from int to float, the number cannot overflow, but it may be rounded
+- from int or float to double, the exact numeric value can be preserved because double has both greater range, as well as greater precision
+- from double to float, the value can overflow to +oo or -oo, since the range is smaller. Otherwise, it may be rounded, because the precision is smaller
+- from float or double to int, the value will be rounded toward zero. For 
+
+## 2.5 Summary
+Computers encode information as bits, generally organized as sequences of bytes.
+Different encodings are used for representing integers, real numbers, and character strings.
+Different models of computers use different conventions for encoding numbers and for ordering the bytes within multi-byte data.
+
+The advantage of 64-bit programs is that they can go beyond the 4 GB address limitation of 32-bit programs
+Most machines encode signed numbers using a two's-complement representation and encode floating-point numbers using IEEE Standard 754.
+Understanding these encodings at the bit level, as well as understanding the mathematical characteristics of teh arithmetic operations, is important for writing programs that operate correctly over the full range of numeric values.
+When casting between signed and unsigned integers of the same size, most C implementations floow the converntion that the underlying bit pattern does not change.
+On a two's-complement machine, this behavior is characterize dby functions T2U and U2T, for a w-bit value.
+the implicit casting of C gives results that many programmers do not anticipate, often leading to program bugs.
+
